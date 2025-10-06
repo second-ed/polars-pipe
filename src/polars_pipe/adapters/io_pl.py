@@ -62,8 +62,13 @@ class IOWrapper:
 
 @attrs.define
 class FakeIOWrapper:
-    _read_funcs: MappingProxyType = attrs.field(factory=dict)
-    _write_funcs: MappingProxyType = attrs.field(factory=dict)
+    files: dict = attrs.field(factory=dict, validator=instance_of(dict))
+    _read_funcs: MappingProxyType = attrs.field(
+        factory=dict, validator=instance_of(MappingProxyType), converter=MappingProxyType
+    )
+    _write_funcs: MappingProxyType = attrs.field(
+        factory=dict, validator=instance_of(MappingProxyType), converter=MappingProxyType
+    )
 
     def __attrs_post_init__(self) -> None:
         self._read_funcs = MappingProxyType(dict.fromkeys(READ_FUNCS, self._read_fn))

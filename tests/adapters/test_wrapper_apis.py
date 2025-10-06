@@ -2,7 +2,7 @@ import inspect
 
 import pytest
 
-from src.polars_pipe.adapters.io_pl import FakeIOWrapper, IOWrapper, IOProtocol
+from src.polars_pipe.adapters.io_pl import FakeIOWrapper, IOProtocol, IOWrapper
 
 
 @pytest.mark.parametrize(
