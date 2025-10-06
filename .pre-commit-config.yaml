@@ -37,5 +37,5 @@ repos:
           - --allowed-exts
           - py,md,yaml,toml,lock
           - --ignore-dirs
-          - .venv,target,.git,mock_data
+          - .venv,target,.git,mock_data,.pytest_cache
           # - --ignore-hidden

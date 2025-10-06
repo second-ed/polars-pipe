@@ -8,6 +8,7 @@ dependencies = [
     "attrs>=25.4.0",
     "polars>=1.34.0",
     "python-dotenv>=1.1.1",
+    "repo-mapper-rs>=0.3.0",
 ]
 
 [dependency-groups]
