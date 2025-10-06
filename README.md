@@ -19,15 +19,15 @@
 │       ├── __init__.py
 │       └── __main__.py
 ├── tests
-│   └── polars_pipe
-│       ├── adapters
-│       │   └── __init__.py
-│       ├── core
-│       │   └── __init__.py
-│       ├── services
-│       │   └── __init__.py
-│       ├── __init__.py
-│       └── test_main.py
+│   ├── adapters
+│   │   ├── __init__.py
+│   │   └── test_wrapper_apis.py
+│   ├── core
+│   │   └── __init__.py
+│   ├── services
+│   │   └── __init__.py
+│   ├── __init__.py
+│   └── test_main.py
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── pyproject.toml
