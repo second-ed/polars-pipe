@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -11,7 +12,7 @@ logger.propagate = False
 REPO_ROOT = Path(__file__).absolute().parents[3]
 load_dotenv(f"{REPO_ROOT}/envs/.env")
 
-if os.getenv("LOGGING_ENABLED", "false").lower() == "true":
+if os.getenv("LOGGING_ENABLED", "false").lower() == "true" and "pytest" not in sys.modules:
     formatter = logging.Formatter(
         "%(asctime)s | %(levelname)-8s [%(filename)s:%(lineno)d:%(funcName)s] %(message)s"
     )
@@ -21,7 +22,7 @@ if os.getenv("LOGGING_ENABLED", "false").lower() == "true":
     stream_handler.setFormatter(formatter)
 
     log_path = f"{REPO_ROOT}/logs/app.log"
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    Path(log_path).parent.mkdir(parents=True, exist_ok=True)
 
     file_handler = RotatingFileHandler(log_path, maxBytes=2_000_000, backupCount=1)
     file_handler.setLevel(logging.DEBUG)
@@ -29,3 +30,4 @@ if os.getenv("LOGGING_ENABLED", "false").lower() == "true":
 
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
+    logger.info("Activating logger...")
