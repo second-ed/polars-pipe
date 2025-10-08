@@ -5,7 +5,17 @@ import polars as pl
 from polars_pipe.core.logger import logger
 
 
+def check_expected_cols(lf: pl.LazyFrame, expected_cols: list[str]) -> pl.LazyFrame:
+    logger.info(f"{expected_cols = }")
+    missing = [c for c in expected_cols if c not in lf.collect_schema().names()]
+    if missing:
+        raise ValueError(f"Missing required columns: {missing}")
+    return lf
+
+
 def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.Expr]:
+    logger.info(f"{rules_config = }")
+
     exprs = {}
 
     for rule_name, expression in rules_config.items():

@@ -5,6 +5,16 @@ import polars as pl
 from polars_pipe.core.logger import logger
 
 
+def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
+    return lf.with_columns(
+        [
+            pl.col(col_name).str.strip_chars().str.to_lowercase().alias(col_name)
+            for col_name, dtype in lf.collect_schema().items()
+            if dtype == pl.Utf8
+        ]
+    )
+
+
 def drop_df_cols(lf: pl.LazyFrame, drop_cols: list[str]) -> pl.LazyFrame:
     if not drop_cols:
         logger.info(f"No drop_cols provided: {drop_cols = }")
