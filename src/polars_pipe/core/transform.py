@@ -64,3 +64,11 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     logger.info(f"Filtering df: {filter_exprs = }")
     combined_filter = pl.all_horizontal(filter_exprs)
     return lf.filter(combined_filter)
+
+
+def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, pl.Expr]) -> pl.LazyFrame:
+    if not new_col_map:
+        logger.info(f"No new_col_map provided: {new_col_map = }")
+        return lf
+    logger.info(f"Deriving new columns: {new_col_map = }")
+    return lf.with_columns([expr.alias(name) for name, expr in new_col_map.items()])
