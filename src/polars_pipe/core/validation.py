@@ -1,6 +1,19 @@
+from typing import Any
+
 import polars as pl
 
 from polars_pipe.core.logger import logger
+
+
+def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.Expr]:
+    exprs = {}
+
+    for rule_name, expression in rules_config.items():
+        col_name, operation, value = expression
+        exprs[rule_name] = getattr(pl.col(col_name), operation)(value)
+
+    logger.info(f"{exprs = }")
+    return exprs
 
 
 def validate_df(lf: pl.LazyFrame, rules: dict[str, pl.Expr]) -> tuple[pl.LazyFrame, pl.LazyFrame]:
