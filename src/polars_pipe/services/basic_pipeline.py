@@ -3,9 +3,9 @@ from typing import Self
 
 import attrs
 
+import polars_pipe.adapters.io_pl as io
 import polars_pipe.core.transform as tf
 import polars_pipe.core.validation as vl
-from polars_pipe.adapters import io_pl
 
 
 @attrs.define
@@ -28,8 +28,8 @@ class TransformConfig:
         return cls(**config)
 
 
-def run_pipeline(io: io_pl.IOProtocol, config: dict) -> None:
-    file_type = io_pl.FileType._member_map_[config["src_file_type"].upper()]
+def run_pipeline(io: io.IOProtocol, config: dict) -> None:
+    file_type = io.FileType._member_map_[config["src_file_type"].upper()]
     lf = io.read(config["src_path"], file_type).lazy()
 
     rules = vl.parse_validation_config(config.get("validation", {}))
@@ -51,5 +51,5 @@ def run_pipeline(io: io_pl.IOProtocol, config: dict) -> None:
         .pipe(tf.derive_cols, new_col_map=tf_config.new_col_map)
         .collect()
     )
-    io.write(tranformed_df, config["valid_dst_path"], file_type=io_pl.FileType.PARQUET)
-    io.write(invalid_lf.collect(), config["invalid_dst_path"], file_type=io_pl.FileType.PARQUET)
+    io.write(tranformed_df, config["valid_dst_path"], file_type=io.FileType.PARQUET)
+    io.write(invalid_lf.collect(), config["invalid_dst_path"], file_type=io.FileType.PARQUET)
