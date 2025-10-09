@@ -28,7 +28,7 @@ class TransformConfig:
         return cls(**config)
 
 
-def run_pipeline(io_wrapper: io.IOProtocol, config: dict) -> None:
+def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
     file_type = io.FileType._member_map_[config["src_file_type"].upper()]
     lf = io_wrapper.read(config["src_path"], file_type).lazy()
 

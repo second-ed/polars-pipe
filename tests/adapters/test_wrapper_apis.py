@@ -2,14 +2,14 @@ import inspect
 
 import pytest
 
-from src.polars_pipe.adapters.io_pl import FakeIOWrapper, IOProtocol, IOWrapper
+from src.polars_pipe.adapters.io_pl import FakeIOWrapper, IOBase, IOWrapper
 
 
 @pytest.mark.parametrize(
     ("obj", "protocol"),
     [
-        pytest.param(IOWrapper(), IOProtocol),
-        pytest.param(FakeIOWrapper(), IOProtocol),
+        pytest.param(IOWrapper(), IOBase),
+        pytest.param(FakeIOWrapper(), IOBase),
     ],
 )
 def test_protocols(obj, protocol):
@@ -71,7 +71,7 @@ class FakeMismatchingSignature:
         ),
         pytest.param(
             IOWrapper,
-            IOProtocol,
+            IOBase,
             id="ensure IO wrapper matches protocol",
         ),
     ],

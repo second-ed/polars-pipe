@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 from enum import Enum
 from types import MappingProxyType
-from typing import Protocol, runtime_checkable
 
 import attrs
 import polars as pl
@@ -31,15 +32,30 @@ WRITE_FUNCS = {
 }
 
 
-@runtime_checkable
-class IOProtocol(Protocol):
-    def read(self, path: str, file_type: FileType, **kwargs: dict) -> pl.DataFrame: ...
+@attrs.define
+class IOBase:
+    def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.DataFrame:
+        logger.debug(f"{path = } {file_type = } {kwargs = }")
+        file_type = self._get_file_type(file_type)
 
-    def write(self, df: pl.DataFrame, path: str, file_type: FileType, **kwargs: dict) -> None: ...
+        if file_type not in self._read_funcs:
+            raise NotImplementedError(f"`read` is not implemented for {file_type}")
+        return self._read_funcs[file_type](path, **kwargs)
+
+    def write(self, df: pl.DataFrame, path: str, file_type: FileType | str, **kwargs: dict) -> None:
+        logger.debug(f"{path = } {file_type = } {kwargs = }")
+        file_type = self._get_file_type(file_type)
+
+        if file_type not in self._write_funcs:
+            raise NotImplementedError(f"`write` is not implemented for {file_type}")
+        return self._write_funcs[file_type](df, path, **kwargs)
+
+    def _get_file_type(self, file_type: FileType | str) -> FileType:
+        return file_type if isinstance(file_type, FileType) else FileType._member_map_[file_type]
 
 
 @attrs.define
-class IOWrapper:
+class IOWrapper(IOBase):
     _read_funcs: MappingProxyType = attrs.field(
         default=READ_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
     )
@@ -47,21 +63,9 @@ class IOWrapper:
         default=WRITE_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
     )
 
-    def read(self, path: str, file_type: FileType, **kwargs: dict) -> pl.DataFrame:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
-        if file_type not in self._read_funcs:
-            raise NotImplementedError(f"`read` is not implemented for {file_type}")
-        return self._read_funcs[file_type](path, **kwargs)
-
-    def write(self, df: pl.DataFrame, path: str, file_type: FileType, **kwargs: dict) -> None:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
-        if file_type not in self._write_funcs:
-            raise NotImplementedError(f"`write` is not implemented for {file_type}")
-        return self._write_funcs[file_type](df, path, **kwargs)
-
 
 @attrs.define
-class FakeIOWrapper:
+class FakeIOWrapper(IOBase):
     files: dict = attrs.field(factory=dict, validator=instance_of(dict))
     _read_funcs: MappingProxyType = attrs.field(
         factory=dict, validator=instance_of(MappingProxyType), converter=MappingProxyType
@@ -73,18 +77,6 @@ class FakeIOWrapper:
     def __attrs_post_init__(self) -> None:
         self._read_funcs = MappingProxyType(dict.fromkeys(READ_FUNCS, self._read_fn))
         self._write_funcs = MappingProxyType(dict.fromkeys(WRITE_FUNCS, self._write_fn))
-
-    def read(self, path: str, file_type: FileType, **kwargs: dict) -> pl.DataFrame:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
-        if file_type not in self._read_funcs:
-            raise NotImplementedError(f"`read` is not implemented for {file_type}")
-        return self._read_funcs[file_type](path)
-
-    def write(self, df: pl.DataFrame, path: str, file_type: FileType, **kwargs: dict) -> None:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
-        if file_type not in self._write_funcs:
-            raise NotImplementedError(f"`write` is not implemented for {file_type}")
-        return self._write_funcs[file_type](df, path)
 
     def _read_fn(self, path: str) -> pl.DataFrame:
         return self.files[path]
