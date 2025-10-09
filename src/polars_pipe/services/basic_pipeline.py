@@ -28,9 +28,9 @@ class TransformConfig:
         return cls(**config)
 
 
-def run_pipeline(io: io.IOProtocol, config: dict) -> None:
+def run_pipeline(io_wrapper: io.IOProtocol, config: dict) -> None:
     file_type = io.FileType._member_map_[config["src_file_type"].upper()]
-    lf = io.read(config["src_path"], file_type).lazy()
+    lf = io_wrapper.read(config["src_path"], file_type).lazy()
 
     rules = vl.parse_validation_config(config.get("validation", {}))
     expected_cols = [val[0] for val in config.get("validation", {}).values()]
@@ -38,7 +38,6 @@ def run_pipeline(io: io.IOProtocol, config: dict) -> None:
     valid_lf, invalid_lf = lf.pipe(vl.check_expected_cols, expected_cols=expected_cols).pipe(
         vl.validate_df, rules=rules
     )
-
     tf_config = TransformConfig.from_dict(config.get("transformations", {}))
 
     tranformed_df = (
@@ -51,5 +50,7 @@ def run_pipeline(io: io.IOProtocol, config: dict) -> None:
         .pipe(tf.derive_cols, new_col_map=tf_config.new_col_map)
         .collect()
     )
-    io.write(tranformed_df, config["valid_dst_path"], file_type=io.FileType.PARQUET)
-    io.write(invalid_lf.collect(), config["invalid_dst_path"], file_type=io.FileType.PARQUET)
+    io_wrapper.write(tranformed_df, config["valid_dst_path"], file_type=io.FileType.PARQUET)
+    io_wrapper.write(
+        invalid_lf.collect(), config["invalid_dst_path"], file_type=io.FileType.PARQUET
+    )
