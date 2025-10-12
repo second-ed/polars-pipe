@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 
 import polars as pl
 
@@ -66,7 +66,7 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     return lf.filter(combined_filter)
 
 
-def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, pl.Expr]) -> pl.LazyFrame:
+def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, Callable[[], pl.Expr]]) -> pl.LazyFrame:
     if not new_col_map:
         logger.info(f"No new_col_map provided: {new_col_map = }")
         return lf
