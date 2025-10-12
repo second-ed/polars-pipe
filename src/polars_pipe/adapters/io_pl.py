@@ -51,7 +51,11 @@ class IOBase:
         return self._write_funcs[file_type](df, path, **kwargs)
 
     def _get_file_type(self, file_type: FileType | str) -> FileType:
-        return file_type if isinstance(file_type, FileType) else FileType._member_map_[file_type]
+        return (
+            file_type
+            if isinstance(file_type, FileType)
+            else FileType._member_map_[file_type.strip().upper()]
+        )
 
 
 @attrs.define

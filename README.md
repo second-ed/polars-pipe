@@ -18,7 +18,8 @@
 │       │   └── validation.py
 │       ├── services
 │       │   ├── __init__.py
-│       │   └── basic_pipeline.py
+│       │   ├── basic_pipeline.py
+│       │   └── derived_cols.py
 │       ├── __init__.py
 │       └── __main__.py
 ├── tests

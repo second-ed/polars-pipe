@@ -71,4 +71,5 @@ def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, pl.Expr]) -> pl.LazyFra
         logger.info(f"No new_col_map provided: {new_col_map = }")
         return lf
     logger.info(f"Deriving new columns: {new_col_map = }")
-    return lf.with_columns([expr.alias(name) for name, expr in new_col_map.items()])
+    # have to call `expr` here because its a partial function object
+    return lf.with_columns([expr().alias(name) for name, expr in new_col_map.items()])
