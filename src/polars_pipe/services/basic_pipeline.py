@@ -6,7 +6,6 @@ import attrs
 import polars_pipe.adapters.io_pl as io
 import polars_pipe.core.transform as tf
 import polars_pipe.core.validation as vl
-import polars_pipe.services.derived_cols as dc
 
 
 @attrs.define
@@ -24,9 +23,6 @@ class TransformConfig:
         config = deepcopy(config)
         config["filter_exprs"] = list(
             vl.parse_validation_config(config.get("filter_exprs", {})).values()
-        )
-        config["new_col_map"] = dc.create_transformations_for_derived_cols(
-            config.get("new_col_map", {})
         )
         return cls(**config)
 

@@ -1,9 +1,11 @@
-from collections.abc import Callable
+import inspect
+from functools import partial
 from typing import Any
 
 import polars as pl
 
 from polars_pipe.core.logger import logger
+from polars_pipe.services import derive_cols
 
 
 def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
@@ -67,10 +69,19 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     return lf.filter(combined_filter)
 
 
-def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, Callable[[], pl.Expr]]) -> pl.LazyFrame:
+DERIVE_FNS = dict(inspect.getmembers(derive_cols, inspect.isfunction))
+logger.info(f"{DERIVE_FNS = }")
+
+
+def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) -> pl.LazyFrame:
     if not new_col_map:
         logger.info(f"No new_col_map provided: {new_col_map = }")
         return lf
     logger.info(f"Deriving new columns: {new_col_map = }")
+    derived_transforms = {
+        derived_col_name: partial(DERIVE_FNS[fn_config["fn_name"]], **fn_config["fn_kwargs"])
+        for derived_col_name, fn_config in new_col_map.items()
+    }
+
     # have to call `expr` here because its a partial function object
-    return lf.with_columns([expr().alias(name) for name, expr in new_col_map.items()])
+    return lf.with_columns([expr().alias(name) for name, expr in derived_transforms.items()])
