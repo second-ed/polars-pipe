@@ -131,7 +131,7 @@ def expected_error_records():
                 "transformations": {
                     "filter_exprs": {"no d division": ["division", "ne", "D"]},
                     "fill_map": {"bonus": 0},
-                    "recast_map": {"bonus": pl.Int64},
+                    "recast_map": {"bonus": "Int64"},
                     "rename_map": {"bonus": "annual_bonus"},
                     "clip_map": {"annual_bonus": (0, 500_000)},
                     "new_col_map": {
@@ -159,15 +159,7 @@ def expected_error_records():
                 "valid_dst_path": "path/to/transformed_data.parquet",
                 "invalid_dst_path": "path/to/error_records.parquet",
                 "validation": {},
-                "transformations": {
-                    "filter_exprs": {},
-                    "fill_map": {},
-                    "recast_map": {},
-                    "rename_map": {},
-                    "clip_map": {},
-                    "new_col_map": {},
-                    "drop_cols": [],
-                },
+                "transformations": {},
             },
             {
                 "path/to/transformed_data.parquet": [

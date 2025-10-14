@@ -1,11 +1,19 @@
+import inspect
 from copy import deepcopy
+from types import MappingProxyType
 from typing import Self
 
 import attrs
+import polars.datatypes.classes as pl_dtypes
+from polars.datatypes._parse import is_polars_dtype
 
 import polars_pipe.adapters.io_pl as io
 import polars_pipe.core.transform as tf
 import polars_pipe.core.validation as vl
+
+POLARS_DTYPE_MAPPING = MappingProxyType(
+    {k: v for k, v in inspect.getmembers(pl_dtypes) if is_polars_dtype(v)}
+)
 
 
 @attrs.define
@@ -26,6 +34,9 @@ class TransformConfig:
         config["filter_exprs"] = list(
             vl.parse_validation_config(config.get("filter_exprs", {})).values()
         )
+        config["recast_map"] = {
+            k: POLARS_DTYPE_MAPPING[v] for k, v in config.get("recast_map", {}).items()
+        }
         return cls(**config)
 
 
