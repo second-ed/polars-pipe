@@ -18,6 +18,7 @@ class TransformConfig:
     filter_exprs: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     new_col_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     unnest_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
+    nest_cols: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
 
     @classmethod
     def from_dict(cls, config: dict) -> Self:
@@ -49,6 +50,7 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
         .pipe(tf.rename_df_cols, rename_map=tf_config.rename_map)
         .pipe(tf.clip_df_cols, clip_map=tf_config.clip_map)
         .pipe(tf.derive_new_cols, new_col_map=tf_config.new_col_map)
+        .pipe(tf.nest_df_cols, nest_cols=tf_config.nest_cols)
         .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
         .collect()
     )

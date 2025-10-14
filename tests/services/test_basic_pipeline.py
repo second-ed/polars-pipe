@@ -58,9 +58,7 @@ def expected_transformed_df():
     return [
         {
             "name": "alice",
-            "salary": 30000,
-            "annual_bonus": 10000,
-            "full_comp": 40000,
+            "comp": {"salary": 30000, "annual_bonus": 10000, "full_comp": 40000},
             "project a": 0.5,
             "project b": 0.5,
             "project c": None,
@@ -68,9 +66,7 @@ def expected_transformed_df():
         },
         {
             "name": "ben",
-            "salary": 28000,
-            "annual_bonus": 15000,
-            "full_comp": 43000,
+            "comp": {"salary": 28000, "annual_bonus": 15000, "full_comp": 43000},
             "project a": None,
             "project b": None,
             "project c": 1.0,
@@ -78,9 +74,7 @@ def expected_transformed_df():
         },
         {
             "name": "charlie",
-            "salary": 75000,
-            "annual_bonus": 0,
-            "full_comp": 75000,
+            "comp": {"salary": 75000, "annual_bonus": 0, "full_comp": 75000},
             "project a": 0.65,
             "project b": 0.35,
             "project c": None,
@@ -88,9 +82,7 @@ def expected_transformed_df():
         },
         {
             "name": "dani",
-            "salary": 50000,
-            "annual_bonus": 70000,
-            "full_comp": 120000,
+            "comp": {"salary": 50000, "annual_bonus": 70000, "full_comp": 120000},
             "project a": 0.95,
             "project b": 0.05,
             "project c": None,
@@ -98,9 +90,7 @@ def expected_transformed_df():
         },
         {
             "name": "emily",
-            "salary": 80000,
-            "annual_bonus": 0,
-            "full_comp": 80000,
+            "comp": {"salary": 80000, "annual_bonus": 0, "full_comp": 80000},
             "project a": None,
             "project b": None,
             "project c": 0.5,
@@ -151,6 +141,7 @@ def expected_error_records():
                         },
                     },
                     "unnest_cols": ["projects"],
+                    "nest_cols": {"comp": ["salary", "annual_bonus", "full_comp"]},
                     "drop_cols": ["division"],
                 },
             },

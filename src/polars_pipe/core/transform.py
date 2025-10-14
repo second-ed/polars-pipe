@@ -60,6 +60,21 @@ def clip_df_cols(lf: pl.LazyFrame, clip_map: dict[str, tuple[float, float]]) -> 
     )
 
 
+def nest_df_cols(lf: pl.LazyFrame, nest_cols: dict[str, list[str]]) -> pl.LazyFrame:
+    if not nest_cols:
+        logger.info(f"No nest_cols provided: {nest_cols = }")
+        return lf
+
+    df = lf.collect()  # noqa: PD901
+    struct_cols, to_drop = [], []
+
+    for name, to_nest in nest_cols.items():
+        struct_cols.append(df[to_nest].to_struct(name))
+        to_drop.extend(to_nest)
+
+    return df.hstack(struct_cols).drop(to_drop).lazy()
+
+
 def unnest_df_cols(lf: pl.LazyFrame, unnest_cols: list[str]) -> pl.LazyFrame:
     if not unnest_cols:
         logger.info(f"No unnest_cols provided: {unnest_cols = }")
