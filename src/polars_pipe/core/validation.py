@@ -20,7 +20,11 @@ def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.
 
     for rule_name, expression in rules_config.items():
         col_name, operation, value = expression
-        exprs[rule_name] = getattr(pl.col(col_name), operation)(value)
+        exprs[rule_name] = (
+            getattr(pl.col(col_name), operation)(value)
+            if value is not None
+            else getattr(pl.col(col_name), operation)()
+        )
 
     logger.info(f"{exprs = }")
     return exprs
@@ -45,7 +49,7 @@ def validate_df(lf: pl.LazyFrame, rules: dict[str, pl.Expr]) -> tuple[pl.LazyFra
         ]
     )
 
-    valid_lf = validated_lf.filter(pl.col("error_reason") == "")
+    valid_lf = validated_lf.filter(pl.col("error_reason") == "").drop("error_reason")
     invalid_lf = validated_lf.filter(pl.col("error_reason") != "")
 
     logger.info(f"{valid_lf.fetch(1).shape = } {invalid_lf.fetch(1).shape = }")

@@ -29,7 +29,8 @@
 │   ├── core
 │   │   └── __init__.py
 │   ├── services
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── test_basic_pipeline.py
 │   ├── __init__.py
 │   └── test_main.py
 ├── .pre-commit-config.yaml
