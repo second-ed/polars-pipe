@@ -8,29 +8,122 @@ from polars_pipe.services.basic_pipeline import run_pipeline
 def basic_df():
     return pl.DataFrame(
         [
-            {"name": "alice ", "salary": 30_000, "division": " B", "bonus": 10_000.0},
-            {"name": "ben", "salary": 28_000, "division": "C", "bonus": 15000.0},
-            {"name": "charlie", "salary": 75000, "division": "A", "bonus": None},
-            {"name": None, "salary": 0, "division": "", "bonus": 0},
-            {"name": "dani", "salary": 50_000, "division": "D", "bonus": 70_000.0},
-            {"name": "emily", "salary": 80000, "division": "A", "bonus": -5000},
+            {
+                "name": "alice ",
+                "salary": 30_000,
+                "division": " B",
+                "bonus": 10_000.0,
+                "projects": {"project a": 0.5, "project b": 0.5},
+            },
+            {
+                "name": "ben",
+                "salary": 28_000,
+                "division": "C",
+                "bonus": 15000.0,
+                "projects": {"project c": 1.0, "project d": 0.0},
+            },
+            {
+                "name": "charlie",
+                "salary": 75000,
+                "division": "A",
+                "bonus": None,
+                "projects": {"project a": 0.65, "project b": 0.35},
+            },
+            {
+                "name": None,
+                "salary": 0,
+                "division": "",
+                "bonus": 0,
+                "projects": {"project c": 0.45, "project d": 0.55},
+            },
+            {
+                "name": "dani",
+                "salary": 50_000,
+                "division": "D",
+                "bonus": 70_000.0,
+                "projects": {"project a": 0.95, "project b": 0.05},
+            },
+            {
+                "name": "emily",
+                "salary": 80000,
+                "division": "A",
+                "bonus": -5000,
+                "projects": {"project c": 0.5, "project d": 0.5},
+            },
         ]
     )
 
 
 def expected_transformed_df():
     return [
-        {"name": "alice", "salary": 30000, "annual_bonus": 10000, "full_comp": 40000},
-        {"name": "ben", "salary": 28000, "annual_bonus": 15000, "full_comp": 43000},
-        {"name": "charlie", "salary": 75000, "annual_bonus": 0, "full_comp": 75000},
-        {"name": "dani", "salary": 50000, "annual_bonus": 70000, "full_comp": 120000},
-        {"name": "emily", "salary": 80000, "annual_bonus": 0, "full_comp": 80000},
+        {
+            "name": "alice",
+            "salary": 30000,
+            "annual_bonus": 10000,
+            "full_comp": 40000,
+            "project a": 0.5,
+            "project b": 0.5,
+            "project c": None,
+            "project d": None,
+        },
+        {
+            "name": "ben",
+            "salary": 28000,
+            "annual_bonus": 15000,
+            "full_comp": 43000,
+            "project a": None,
+            "project b": None,
+            "project c": 1.0,
+            "project d": 0.0,
+        },
+        {
+            "name": "charlie",
+            "salary": 75000,
+            "annual_bonus": 0,
+            "full_comp": 75000,
+            "project a": 0.65,
+            "project b": 0.35,
+            "project c": None,
+            "project d": None,
+        },
+        {
+            "name": "dani",
+            "salary": 50000,
+            "annual_bonus": 70000,
+            "full_comp": 120000,
+            "project a": 0.95,
+            "project b": 0.05,
+            "project c": None,
+            "project d": None,
+        },
+        {
+            "name": "emily",
+            "salary": 80000,
+            "annual_bonus": 0,
+            "full_comp": 80000,
+            "project a": None,
+            "project b": None,
+            "project c": 0.5,
+            "project d": 0.5,
+        },
     ]
 
 
 def expected_error_records():
     return [
-        {"name": None, "salary": 0, "division": "", "bonus": 0.0, "error_reason": "missing name"}
+        {
+            "name": None,
+            "salary": 0,
+            "division": "",
+            "bonus": 0.0,
+            "projects": {
+                "project a": None,
+                "project b": None,
+                "project c": 0.45,
+                "project d": 0.55,
+            },
+            "error_reason": "missing name",
+        }
     ]
 
 
@@ -57,6 +150,7 @@ def expected_error_records():
                             "fn_kwargs": {"col1": "salary", "col2": "annual_bonus"},
                         },
                     },
+                    "unnest_cols": ["projects"],
                     "drop_cols": ["division"],
                 },
             },
@@ -91,36 +185,72 @@ def expected_error_records():
                         "salary": 30000,
                         "division": "b",
                         "bonus": 10000.0,
+                        "projects": {
+                            "project a": 0.5,
+                            "project b": 0.5,
+                            "project c": None,
+                            "project d": None,
+                        },
                     },
                     {
                         "name": "ben",
                         "salary": 28000,
                         "division": "c",
                         "bonus": 15000.0,
+                        "projects": {
+                            "project a": None,
+                            "project b": None,
+                            "project c": 1.0,
+                            "project d": 0.0,
+                        },
                     },
                     {
                         "name": "charlie",
                         "salary": 75000,
                         "division": "a",
                         "bonus": None,
+                        "projects": {
+                            "project a": 0.65,
+                            "project b": 0.35,
+                            "project c": None,
+                            "project d": None,
+                        },
                     },
                     {
                         "name": None,
                         "salary": 0,
                         "division": "",
                         "bonus": 0.0,
+                        "projects": {
+                            "project a": None,
+                            "project b": None,
+                            "project c": 0.45,
+                            "project d": 0.55,
+                        },
                     },
                     {
                         "name": "dani",
                         "salary": 50000,
                         "division": "d",
                         "bonus": 70000.0,
+                        "projects": {
+                            "project a": 0.95,
+                            "project b": 0.05,
+                            "project c": None,
+                            "project d": None,
+                        },
                     },
                     {
                         "name": "emily",
                         "salary": 80000,
                         "division": "a",
                         "bonus": -5000.0,
+                        "projects": {
+                            "project a": None,
+                            "project b": None,
+                            "project c": 0.5,
+                            "project d": 0.5,
+                        },
                     },
                 ],
             },

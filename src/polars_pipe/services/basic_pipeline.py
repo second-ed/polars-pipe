@@ -17,6 +17,7 @@ class TransformConfig:
     clip_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     filter_exprs: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     new_col_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    unnest_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
 
     @classmethod
     def from_dict(cls, config: dict) -> Self:
@@ -41,6 +42,7 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
 
     tranformed_df = (
         valid_lf.pipe(tf.normalise_str_cols)
+        .pipe(tf.unnest_df_cols, tf_config.unnest_cols)
         .pipe(tf.filter_df, filter_exprs=tf_config.filter_exprs)
         .pipe(tf.fill_nulls_per_col, fill_map=tf_config.fill_map)
         .pipe(tf.recast_df_cols, recast_map=tf_config.recast_map)

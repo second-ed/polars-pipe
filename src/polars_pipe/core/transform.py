@@ -60,6 +60,14 @@ def clip_df_cols(lf: pl.LazyFrame, clip_map: dict[str, tuple[float, float]]) -> 
     )
 
 
+def unnest_df_cols(lf: pl.LazyFrame, unnest_cols: list[str]) -> pl.LazyFrame:
+    if not unnest_cols:
+        logger.info(f"No unnest_cols provided: {unnest_cols = }")
+        return lf
+    logger.info(f"Unnesting: {unnest_cols = }")
+    return lf.unnest(unnest_cols)
+
+
 def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     if not filter_exprs:
         logger.info(f"No filter_exprs provided: {filter_exprs = }")
