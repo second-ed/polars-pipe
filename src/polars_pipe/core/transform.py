@@ -73,7 +73,7 @@ DERIVE_FNS = dict(inspect.getmembers(derive_cols, inspect.isfunction))
 logger.info(f"{DERIVE_FNS = }")
 
 
-def derive_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) -> pl.LazyFrame:
+def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) -> pl.LazyFrame:
     if not new_col_map:
         logger.info(f"No new_col_map provided: {new_col_map = }")
         return lf

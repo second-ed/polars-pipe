@@ -42,11 +42,11 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
     tranformed_df = (
         valid_lf.pipe(tf.normalise_str_cols)
         .pipe(tf.filter_df, filter_exprs=tf_config.filter_exprs)
-        .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
         .pipe(tf.recast_df_cols, recast_map=tf_config.recast_map)
         .pipe(tf.fill_nulls_per_col, fill_map=tf_config.fill_map)
         .pipe(tf.rename_df_cols, rename_map=tf_config.rename_map)
-        .pipe(tf.derive_cols, new_col_map=tf_config.new_col_map)
+        .pipe(tf.derive_new_cols, new_col_map=tf_config.new_col_map)
+        .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
         .collect()
     )
     io_wrapper.write(tranformed_df, config["valid_dst_path"], file_type=io.FileType.PARQUET)
