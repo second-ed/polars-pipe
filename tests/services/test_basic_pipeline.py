@@ -123,7 +123,6 @@ def expected_error_records():
                         "bonus": -5000.0,
                     },
                 ],
-                "path/to/error_records.parquet": [],
             },
             id="should skip all stages if not given config",
         ),

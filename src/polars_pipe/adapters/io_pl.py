@@ -43,7 +43,7 @@ class IOBase:
         return self._read_funcs[file_type](path, **kwargs)
 
     def write(self, df: pl.DataFrame, path: str, file_type: FileType | str, **kwargs: dict) -> None:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
+        logger.debug(f"{df.shape = } {path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._write_funcs:

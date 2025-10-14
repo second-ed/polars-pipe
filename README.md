@@ -31,8 +31,7 @@
 │   ├── services
 │   │   ├── __init__.py
 │   │   └── test_basic_pipeline.py
-│   ├── __init__.py
-│   └── test_main.py
+│   └── __init__.py
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── pyproject.toml

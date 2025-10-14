@@ -52,5 +52,4 @@ def validate_df(lf: pl.LazyFrame, rules: dict[str, pl.Expr]) -> tuple[pl.LazyFra
     valid_lf = validated_lf.filter(pl.col("error_reason") == "").drop("error_reason")
     invalid_lf = validated_lf.filter(pl.col("error_reason") != "")
 
-    logger.info(f"{valid_lf.fetch(1).shape = } {invalid_lf.fetch(1).shape = }")
     return valid_lf, invalid_lf

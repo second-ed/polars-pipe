@@ -51,6 +51,7 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
         .collect()
     )
     io_wrapper.write(tranformed_df, config["valid_dst_path"], file_type=io.FileType.PARQUET)
-    io_wrapper.write(
-        invalid_lf.collect(), config["invalid_dst_path"], file_type=io.FileType.PARQUET
-    )
+
+    invalid_df = invalid_lf.collect()
+    if not invalid_df.is_empty():
+        io_wrapper.write(invalid_df, config["invalid_dst_path"], file_type=io.FileType.PARQUET)
