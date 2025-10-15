@@ -17,6 +17,22 @@ POLARS_DTYPE_MAPPING = MappingProxyType(
 
 
 @attrs.define
+class GeneralConfig:
+    src_path: str = attrs.field(validator=attrs.validators.instance_of(str))
+    src_file_type: str = attrs.field(
+        validator=[
+            attrs.validators.instance_of(str),
+            attrs.validators.in_(io.FileType._member_map_),
+        ],
+        converter=str.upper,
+    )
+    valid_dst_path: str = attrs.field(validator=attrs.validators.instance_of(str))
+    invalid_dst_path: str = attrs.field(validator=attrs.validators.instance_of(str))
+    validation: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    transformations: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+
+
+@attrs.define
 class TransformConfig:
     drop_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     rename_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
@@ -41,18 +57,20 @@ class TransformConfig:
 
 
 def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
-    file_type = io.FileType._member_map_[config["src_file_type"].upper()]
-    lf = io_wrapper.read(config["src_path"], file_type).lazy()
+    parsed_config = GeneralConfig(**config)
 
-    rules = vl.parse_validation_config(config.get("validation", {}))
-    expected_cols = [val[0] for val in config.get("validation", {}).values()]
+    file_type = io.FileType._member_map_[parsed_config.src_file_type]
+    lf = io_wrapper.read(parsed_config.src_path, file_type).lazy()
+
+    rules = vl.parse_validation_config(parsed_config.validation)
+    expected_cols = [val[0] for val in parsed_config.validation.values()]
 
     valid_lf, invalid_lf = lf.pipe(vl.check_expected_cols, expected_cols=expected_cols).pipe(
         vl.validate_df, rules=rules
     )
-    tf_config = TransformConfig.from_dict(config.get("transformations", {}))
+    tf_config = TransformConfig.from_dict(parsed_config.transformations)
 
-    tranformed_df = (
+    transformed_df = (
         valid_lf.pipe(tf.normalise_str_cols)
         .pipe(tf.unnest_df_cols, tf_config.unnest_cols)
         .pipe(tf.filter_df, filter_exprs=tf_config.filter_exprs)
@@ -65,8 +83,8 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
         .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
         .collect()
     )
-    io_wrapper.write(tranformed_df, config["valid_dst_path"], file_type=io.FileType.PARQUET)
+    io_wrapper.write(transformed_df, parsed_config.valid_dst_path, file_type=io.FileType.PARQUET)
 
     invalid_df = invalid_lf.collect()
     if not invalid_df.is_empty():
-        io_wrapper.write(invalid_df, config["invalid_dst_path"], file_type=io.FileType.PARQUET)
+        io_wrapper.write(invalid_df, parsed_config.invalid_dst_path, file_type=io.FileType.PARQUET)
