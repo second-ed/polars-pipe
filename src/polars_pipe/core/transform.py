@@ -65,14 +65,9 @@ def nest_df_cols(lf: pl.LazyFrame, nest_cols: dict[str, list[str]]) -> pl.LazyFr
         logger.info(f"No nest_cols provided: {nest_cols = }")
         return lf
 
-    df = lf.collect()
-    struct_cols, to_drop = [], []
-
-    for name, to_nest in nest_cols.items():
-        struct_cols.append(df[to_nest].to_struct(name))
-        to_drop.extend(to_nest)
-
-    return df.hstack(struct_cols).drop(to_drop).lazy()
+    return lf.with_columns(
+        [pl.struct(to_nest).alias(name) for name, to_nest in nest_cols.items()]
+    ).drop(*[c for cols in nest_cols.values() for c in cols])
 
 
 def unnest_df_cols(lf: pl.LazyFrame, unnest_cols: list[str]) -> pl.LazyFrame:
