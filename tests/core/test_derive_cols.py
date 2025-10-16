@@ -68,7 +68,7 @@ BASIC_DF = pl.DataFrame(
         ),
     ],
 )
-def test_add_cols(raw_data, derive_fn, cols, expected_result):
+def test_derive_cols(raw_data, derive_fn, cols, expected_result):
     assert (
         raw_data.with_columns(derive_fn(cols).alias("result")).to_dicts()
         == expected_result.to_dicts()
