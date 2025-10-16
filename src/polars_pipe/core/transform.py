@@ -4,8 +4,8 @@ from typing import Any
 
 import polars as pl
 
+from polars_pipe.core import derive_cols
 from polars_pipe.core.logger import logger
-from polars_pipe.services import derive_cols
 
 
 def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
@@ -87,7 +87,9 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     return lf.filter(combined_filter)
 
 
-DERIVE_FNS = dict(inspect.getmembers(derive_cols, inspect.isfunction))
+DERIVE_FNS = {
+    k: v for k, v in inspect.getmembers(derive_cols, inspect.isfunction) if not k.startswith("_")
+}
 logger.info(f"{DERIVE_FNS = }")
 
 

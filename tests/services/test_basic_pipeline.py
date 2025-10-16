@@ -137,7 +137,7 @@ def expected_error_records():
                     "new_col_map": {
                         "full_comp": {
                             "fn_name": "add_cols",
-                            "fn_kwargs": {"col1": "salary", "col2": "annual_bonus"},
+                            "fn_kwargs": {"cols": ["salary", "annual_bonus"]},
                         },
                     },
                     "unnest_cols": ["projects"],
