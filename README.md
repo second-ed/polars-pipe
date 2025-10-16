@@ -27,7 +27,8 @@
 │   │   ├── __init__.py
 │   │   └── test_wrapper_apis.py
 │   ├── core
-│   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   └── test_derive_cols.py
 │   ├── services
 │   │   ├── __init__.py
 │   │   └── test_basic_pipeline.py
