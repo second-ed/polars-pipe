@@ -65,8 +65,10 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
     rules = vl.parse_validation_config(parsed_config.validation)
     expected_cols = [val[0] for val in parsed_config.validation.values()]
 
-    valid_lf, invalid_lf = lf.pipe(vl.check_expected_cols, expected_cols=expected_cols).pipe(
-        vl.validate_df, rules=rules
+    valid_lf, invalid_lf = (
+        lf.pipe(vl.check_expected_cols, expected_cols=expected_cols)
+        .pipe(tf.add_process_cols, guid=io_wrapper.get_guid(), date_time=io_wrapper.get_datetime())
+        .pipe(vl.validate_df, rules=rules)
     )
     tf_config = TransformConfig.from_dict(parsed_config.transformations)
 

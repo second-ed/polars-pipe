@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import datetime
+from abc import ABC, abstractmethod
 from enum import Enum
 from types import MappingProxyType
+from uuid import uuid4
 
 import attrs
 import polars as pl
@@ -33,7 +36,7 @@ WRITE_FUNCS = {
 
 
 @attrs.define
-class IOBase:
+class IOBase(ABC):
     def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.DataFrame:
         logger.debug(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
@@ -57,6 +60,14 @@ class IOBase:
             else FileType._member_map_[file_type.strip().upper()]
         )
 
+    @abstractmethod
+    def get_guid(self) -> str:
+        pass
+
+    @abstractmethod
+    def get_datetime(self) -> datetime.datetime:
+        pass
+
 
 @attrs.define
 class IOWrapper(IOBase):
@@ -66,6 +77,12 @@ class IOWrapper(IOBase):
     _write_funcs: MappingProxyType = attrs.field(
         default=WRITE_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
     )
+
+    def get_guid(self) -> str:
+        return f"{uuid4()}"
+
+    def get_datetime(self) -> datetime.datetime:
+        return datetime.datetime.now(datetime.UTC)
 
 
 @attrs.define
@@ -87,3 +104,9 @@ class FakeIOWrapper(IOBase):
 
     def _write_fn(self, df: pl.DataFrame, path: str) -> None:
         self.files[path] = df
+
+    def get_guid(self) -> str:
+        return "abc-123"
+
+    def get_datetime(self) -> datetime.datetime:
+        return datetime.datetime(2025, 10, 16, 12, tzinfo=datetime.UTC)

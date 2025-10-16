@@ -1,4 +1,5 @@
 import inspect
+from datetime import datetime
 from functools import partial
 from typing import Any
 
@@ -6,6 +7,12 @@ import polars as pl
 
 from polars_pipe.core import derive_cols
 from polars_pipe.core.logger import logger
+
+
+def add_process_cols(lf: pl.LazyFrame, guid: str, date_time: datetime) -> pl.LazyFrame:
+    return lf.with_columns(
+        [pl.lit(guid).alias("process_guid"), pl.lit(date_time).alias("process_datetime")]
+    )
 
 
 def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:

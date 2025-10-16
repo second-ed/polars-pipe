@@ -1,3 +1,5 @@
+import datetime
+
 import polars as pl
 import pytest
 
@@ -63,6 +65,8 @@ def expected_transformed_df():
             "project b": 0.5,
             "project c": None,
             "project d": None,
+            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "process_guid": "abc-123",
         },
         {
             "name": "ben",
@@ -71,6 +75,8 @@ def expected_transformed_df():
             "project b": None,
             "project c": 1.0,
             "project d": 0.0,
+            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "process_guid": "abc-123",
         },
         {
             "name": "charlie",
@@ -79,6 +85,8 @@ def expected_transformed_df():
             "project b": 0.35,
             "project c": None,
             "project d": None,
+            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "process_guid": "abc-123",
         },
         {
             "name": "dani",
@@ -87,6 +95,8 @@ def expected_transformed_df():
             "project b": 0.05,
             "project c": None,
             "project d": None,
+            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "process_guid": "abc-123",
         },
         {
             "name": "emily",
@@ -95,6 +105,8 @@ def expected_transformed_df():
             "project b": None,
             "project c": 0.5,
             "project d": 0.5,
+            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "process_guid": "abc-123",
         },
     ]
 
@@ -112,6 +124,8 @@ def expected_error_records():
                 "project c": 0.45,
                 "project d": 0.55,
             },
+            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "process_guid": "abc-123",
             "error_reason": "missing name",
         }
     ]
@@ -174,6 +188,10 @@ def expected_error_records():
                             "project c": None,
                             "project d": None,
                         },
+                        "process_datetime": datetime.datetime(
+                            2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                        ),
+                        "process_guid": "abc-123",
                     },
                     {
                         "name": "ben",
@@ -186,6 +204,10 @@ def expected_error_records():
                             "project c": 1.0,
                             "project d": 0.0,
                         },
+                        "process_datetime": datetime.datetime(
+                            2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                        ),
+                        "process_guid": "abc-123",
                     },
                     {
                         "name": "charlie",
@@ -198,6 +220,10 @@ def expected_error_records():
                             "project c": None,
                             "project d": None,
                         },
+                        "process_datetime": datetime.datetime(
+                            2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                        ),
+                        "process_guid": "abc-123",
                     },
                     {
                         "name": None,
@@ -210,6 +236,10 @@ def expected_error_records():
                             "project c": 0.45,
                             "project d": 0.55,
                         },
+                        "process_datetime": datetime.datetime(
+                            2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                        ),
+                        "process_guid": "abc-123",
                     },
                     {
                         "name": "dani",
@@ -222,6 +252,10 @@ def expected_error_records():
                             "project c": None,
                             "project d": None,
                         },
+                        "process_datetime": datetime.datetime(
+                            2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                        ),
+                        "process_guid": "abc-123",
                     },
                     {
                         "name": "emily",
@@ -234,6 +268,10 @@ def expected_error_records():
                             "project c": 0.5,
                             "project d": 0.5,
                         },
+                        "process_datetime": datetime.datetime(
+                            2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                        ),
+                        "process_guid": "abc-123",
                     },
                 ],
             },
