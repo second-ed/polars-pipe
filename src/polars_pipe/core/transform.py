@@ -97,6 +97,7 @@ def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) ->
     if not new_col_map:
         logger.info(f"No new_col_map provided: {new_col_map = }")
         return lf
+
     logger.info(f"Deriving new columns: {new_col_map = }")
     derived_transforms = {
         derived_col_name: partial(DERIVE_FNS[fn_config["fn_name"]], **fn_config["fn_kwargs"])
