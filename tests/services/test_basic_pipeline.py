@@ -6,136 +6,141 @@ import pytest
 from polars_pipe.adapters.io_pl import FakeIOWrapper
 from polars_pipe.services.basic_pipeline import run_pipeline
 
-
-def basic_df():
-    return pl.DataFrame(
-        [
-            {
-                "name": "alice ",
-                "salary": 30_000,
-                "division": " B",
-                "bonus": 10_000.0,
-                "projects": {"project a": 0.5, "project b": 0.5},
-            },
-            {
-                "name": "ben",
-                "salary": 28_000,
-                "division": "C",
-                "bonus": 15000.0,
-                "projects": {"project c": 1.0, "project d": 0.0},
-            },
-            {
-                "name": "charlie",
-                "salary": 75000,
-                "division": "A",
-                "bonus": None,
-                "projects": {"project a": 0.65, "project b": 0.35},
-            },
-            {
-                "name": None,
-                "salary": 0,
-                "division": "",
-                "bonus": 0,
-                "projects": {"project c": 0.45, "project d": 0.55},
-            },
-            {
-                "name": "dani",
-                "salary": 50_000,
-                "division": "D",
-                "bonus": 70_000.0,
-                "projects": {"project a": 0.95, "project b": 0.05},
-            },
-            {
-                "name": "emily",
-                "salary": 80000,
-                "division": "A",
-                "bonus": -5000,
-                "projects": {"project c": 0.5, "project d": 0.5},
-            },
-        ]
-    )
-
-
-def expected_transformed_df():
-    return [
+BASIC_INPUT_DF = pl.DataFrame(
+    [
         {
-            "name": "alice",
-            "comp": {"salary": 30000, "annual_bonus": 10000, "full_comp": 40000},
-            "project a": 0.5,
-            "project b": 0.5,
-            "project c": None,
-            "project d": None,
-            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "process_guid": "abc-123",
+            "name": "alice ",
+            "salary": 30_000,
+            "division": " B",
+            "bonus": 10_000.0,
+            "projects": {"project a": 0.5, "project b": 0.5},
         },
         {
             "name": "ben",
-            "comp": {"salary": 28000, "annual_bonus": 15000, "full_comp": 43000},
-            "project a": None,
-            "project b": None,
-            "project c": 1.0,
-            "project d": 0.0,
-            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "process_guid": "abc-123",
+            "salary": 28_000,
+            "division": "C",
+            "bonus": 15000.0,
+            "projects": {"project c": 1.0, "project d": 0.0},
         },
         {
             "name": "charlie",
-            "comp": {"salary": 75000, "annual_bonus": 0, "full_comp": 75000},
-            "project a": 0.65,
-            "project b": 0.35,
-            "project c": None,
-            "project d": None,
-            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "process_guid": "abc-123",
+            "salary": 75000,
+            "division": "A",
+            "bonus": None,
+            "projects": {"project a": 0.65, "project b": 0.35},
         },
-        {
-            "name": "dani",
-            "comp": {"salary": 50000, "annual_bonus": 70000, "full_comp": 120000},
-            "project a": 0.95,
-            "project b": 0.05,
-            "project c": None,
-            "project d": None,
-            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "process_guid": "abc-123",
-        },
-        {
-            "name": "emily",
-            "comp": {"salary": 80000, "annual_bonus": 0, "full_comp": 80000},
-            "project a": None,
-            "project b": None,
-            "project c": 0.5,
-            "project d": 0.5,
-            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "process_guid": "abc-123",
-        },
-    ]
-
-
-def expected_error_records():
-    return [
         {
             "name": None,
             "salary": 0,
             "division": "",
-            "bonus": 0.0,
-            "projects": {
-                "project a": None,
-                "project b": None,
-                "project c": 0.45,
-                "project d": 0.55,
-            },
-            "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "process_guid": "abc-123",
-            "error_reason": "missing name",
-        }
+            "bonus": 0,
+            "projects": {"project c": 0.45, "project d": 0.55},
+        },
+        {
+            "name": "dani",
+            "salary": 50_000,
+            "division": "D",
+            "bonus": 70_000.0,
+            "projects": {"project a": 0.95, "project b": 0.05},
+        },
+        {
+            "name": "emily",
+            "salary": 80000,
+            "division": "A",
+            "bonus": -5000,
+            "projects": {"project c": 0.5, "project d": 0.5},
+        },
     ]
+)
+
+
+EXPECTED_TRANSFORMED_DF = [
+    {
+        "name": "alice",
+        "comp": {"salary": 30000, "annual_bonus": 10000, "full_comp": 40000},
+        "project a": 0.5,
+        "project b": 0.5,
+        "project c": None,
+        "project d": None,
+        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "process_guid": "abc-123",
+        "custom_transformation_status": "applied",
+    },
+    {
+        "name": "ben",
+        "comp": {"salary": 28000, "annual_bonus": 15000, "full_comp": 43000},
+        "project a": None,
+        "project b": None,
+        "project c": 1.0,
+        "project d": 0.0,
+        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "process_guid": "abc-123",
+        "custom_transformation_status": "applied",
+    },
+    {
+        "name": "charlie",
+        "comp": {"salary": 75000, "annual_bonus": 0, "full_comp": 75000},
+        "project a": 0.65,
+        "project b": 0.35,
+        "project c": None,
+        "project d": None,
+        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "process_guid": "abc-123",
+        "custom_transformation_status": "applied",
+    },
+    {
+        "name": "dani",
+        "comp": {"salary": 50000, "annual_bonus": 70000, "full_comp": 120000},
+        "project a": 0.95,
+        "project b": 0.05,
+        "project c": None,
+        "project d": None,
+        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "process_guid": "abc-123",
+        "custom_transformation_status": "applied",
+    },
+    {
+        "name": "emily",
+        "comp": {"salary": 80000, "annual_bonus": 0, "full_comp": 80000},
+        "project a": None,
+        "project b": None,
+        "project c": 0.5,
+        "project d": 0.5,
+        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "process_guid": "abc-123",
+        "custom_transformation_status": "applied",
+    },
+]
+
+
+EXPECTED_ERROR_RECORDS = [
+    {
+        "name": None,
+        "salary": 0,
+        "division": "",
+        "bonus": 0.0,
+        "projects": {
+            "project a": None,
+            "project b": None,
+            "project c": 0.45,
+            "project d": 0.55,
+        },
+        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "process_guid": "abc-123",
+        "error_reason": "missing name",
+    }
+]
+
+
+def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
+    return lf.with_columns(pl.lit(status).alias("custom_transformation_status"))
 
 
 @pytest.mark.parametrize(
-    ("raw_data", "config", "expected_result"),
+    ("raw_data", "config", "custom_transformation_fns", "expected_result"),
     [
         pytest.param(
-            {"path/to/raw_data.parquet": basic_df()},
+            {"path/to/raw_data.parquet": BASIC_INPUT_DF},
             {
                 "src_path": "path/to/raw_data.parquet",
                 "src_file_type": "parquet",
@@ -158,15 +163,19 @@ def expected_error_records():
                     "nest_cols": {"comp": ["salary", "annual_bonus", "full_comp"]},
                     "drop_cols": ["division"],
                 },
+                "custom_transformations": {
+                    "mock_custom_transformation": {"status": "applied"},
+                },
             },
+            {"mock_custom_transformation": mock_custom_transformation},
             {
-                "path/to/transformed_data.parquet": expected_transformed_df(),
-                "path/to/error_records.parquet": expected_error_records(),
+                "path/to/transformed_data.parquet": EXPECTED_TRANSFORMED_DF,
+                "path/to/error_records.parquet": EXPECTED_ERROR_RECORDS,
             },
             id="transforms and filters dfs when given populated config",
         ),
         pytest.param(
-            {"path/to/raw_data.parquet": basic_df()},
+            {"path/to/raw_data.parquet": BASIC_INPUT_DF},
             {
                 "src_path": "path/to/raw_data.parquet",
                 "src_file_type": "parquet",
@@ -175,6 +184,7 @@ def expected_error_records():
                 "validation": {},
                 "transformations": {},
             },
+            None,
             {
                 "path/to/transformed_data.parquet": [
                     {
@@ -279,9 +289,9 @@ def expected_error_records():
         ),
     ],
 )
-def test_basic_pipeline(raw_data, config, expected_result):
+def test_basic_pipeline(raw_data, config, custom_transformation_fns, expected_result):
     io = FakeIOWrapper(files=raw_data)
-    run_pipeline(io, config)
+    run_pipeline(io, config, custom_transformation_fns)
     assert (
         io.files[config["valid_dst_path"]].to_dicts() == expected_result[config["valid_dst_path"]]
     )

@@ -1,4 +1,5 @@
 import inspect
+from collections.abc import Callable
 from datetime import datetime
 from functools import partial
 from typing import Any
@@ -113,3 +114,19 @@ def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) ->
 
     # have to call `expr` here because its a partial function object
     return lf.with_columns([expr().alias(name) for name, expr in derived_transforms.items()])
+
+
+def pipe_custom_transformations(
+    lf: pl.LazyFrame,
+    custom_transformation_fns: dict[str, Callable[[pl.LazyFrame, Any], pl.LazyFrame]],
+    custom_transformation_map: dict[str, dict[str, dict[str, Any]]],
+) -> pl.LazyFrame:
+    if not custom_transformation_map:
+        logger.info(f"No custom_transformation_map provided: {custom_transformation_map = }")
+        return lf
+
+    for fn_name, kwargs in custom_transformation_map.items():
+        logger.info(f"Applying custom transformation: {fn_name = } {kwargs = }")
+        func = custom_transformation_fns[fn_name]
+        lf = lf.pipe(func, **kwargs)
+    return lf

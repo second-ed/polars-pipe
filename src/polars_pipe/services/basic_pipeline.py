@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import inspect
+from collections.abc import Callable
 from copy import deepcopy
 from types import MappingProxyType
 from typing import Self
@@ -30,6 +33,9 @@ class GeneralConfig:
     invalid_dst_path: str = attrs.field(validator=attrs.validators.instance_of(str))
     validation: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     transformations: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    custom_transformations: dict = attrs.field(
+        factory=dict, validator=attrs.validators.instance_of(dict)
+    )
 
 
 @attrs.define
@@ -56,7 +62,13 @@ class TransformConfig:
         return cls(**config)
 
 
-def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
+def run_pipeline(
+    io_wrapper: io.IOBase,
+    config: dict,
+    custom_transformation_fns: dict[str, Callable] | None = None,
+) -> None:
+    custom_transformation_fns = custom_transformation_fns or {}
+
     parsed_config = GeneralConfig(**config)
 
     file_type = io.FileType._member_map_[parsed_config.src_file_type]
@@ -72,7 +84,7 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
     )
     tf_config = TransformConfig.from_dict(parsed_config.transformations)
 
-    transformed_df = (
+    pipeline_plan = (
         valid_lf.pipe(tf.normalise_str_cols)
         .pipe(tf.unnest_df_cols, tf_config.unnest_cols)
         .pipe(tf.filter_df, filter_exprs=tf_config.filter_exprs)
@@ -83,8 +95,13 @@ def run_pipeline(io_wrapper: io.IOBase, config: dict) -> None:
         .pipe(tf.derive_new_cols, new_col_map=tf_config.new_col_map)
         .pipe(tf.nest_df_cols, nest_cols=tf_config.nest_cols)
         .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
-        .collect()
     )
+
+    pipeline_plan = tf.pipe_custom_transformations(
+        pipeline_plan, custom_transformation_fns, parsed_config.custom_transformations
+    )
+
+    transformed_df = pipeline_plan.collect()
     io_wrapper.write(transformed_df, parsed_config.valid_dst_path, file_type=io.FileType.PARQUET)
 
     invalid_df = invalid_lf.collect()
