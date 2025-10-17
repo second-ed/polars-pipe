@@ -19,7 +19,9 @@ def abs_path(path: str) -> str:
 @attrs.define
 class GeneralConfig:
     guid: str = attrs.field(validator=attrs.validators.instance_of(str))
-    date_time: str = attrs.field(validator=attrs.validators.instance_of(str), converter=str)
+    date_time: str = attrs.field(
+        validator=attrs.validators.instance_of(str), converter=lambda x: x.strftime("%Y%m%d_%H%M")
+    )
     process_name: str = attrs.field(validator=attrs.validators.instance_of(str))
     src_path: str = attrs.field(validator=attrs.validators.instance_of(str), converter=abs_path)
     src_file_type: str = attrs.field(
@@ -124,8 +126,10 @@ def run_pipeline(
     transformed_df = pipeline_plan.collect()
     io_wrapper.write(
         parsed_config.to_dict(),
-        Path(parsed_config.config_dst_dir).joinpath(
-            f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
+        str(
+            Path(parsed_config.config_dst_dir).joinpath(
+                f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
+            )
         ),
         file_type=io.FileType.YAML,
     )

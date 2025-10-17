@@ -173,6 +173,36 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
             {
                 abs_path("path/to/transformed_data.parquet"): EXPECTED_TRANSFORMED_DF,
                 abs_path("path/to/error_records.parquet"): EXPECTED_ERROR_RECORDS,
+                abs_path("./path/to/ingest_20251016_1200.yaml"): {
+                    "guid": "abc-123",
+                    "date_time": "20251016_1200",
+                    "process_name": "ingest",
+                    "src_path": abs_path("./path/to/raw_data.parquet"),
+                    "src_file_type": "PARQUET",
+                    "valid_dst_path": abs_path("./path/to/transformed_data.parquet"),
+                    "invalid_dst_path": abs_path("./path/to/error_records.parquet"),
+                    "config_dst_dir": abs_path("./path/to"),
+                    "validation": {"missing name": ["name", "is_not_null", None]},
+                    "transformations": {
+                        "filter_exprs": {"no d division": ["division", "ne", "D"]},
+                        "fill_map": {"bonus": 0},
+                        "recast_map": {"bonus": "Int64"},
+                        "rename_map": {"bonus": "annual_bonus"},
+                        "clip_map": {"annual_bonus": (0, 500_000)},
+                        "new_col_map": {
+                            "full_comp": {
+                                "fn_name": "add_cols",
+                                "fn_kwargs": {"cols": ["salary", "annual_bonus"]},
+                            },
+                        },
+                        "unnest_cols": ["projects"],
+                        "nest_cols": {"comp": ["salary", "annual_bonus", "full_comp"]},
+                        "drop_cols": ["division"],
+                    },
+                    "custom_transformations": {
+                        "mock_custom_transformation": {"status": "applied"},
+                    },
+                },
             },
             id="transforms and filters dfs when given populated config",
         ),
@@ -288,6 +318,19 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                         "ingest_guid": "abc-123",
                     },
                 ],
+                abs_path("./path/to/ingest_20251016_1200.yaml"): {
+                    "guid": "abc-123",
+                    "date_time": "20251016_1200",
+                    "process_name": "ingest",
+                    "src_path": abs_path("./path/to/raw_data.parquet"),
+                    "src_file_type": "PARQUET",
+                    "valid_dst_path": abs_path("./path/to/transformed_data.parquet"),
+                    "invalid_dst_path": abs_path("./path/to/error_records.parquet"),
+                    "config_dst_dir": abs_path("./path/to"),
+                    "validation": {},
+                    "transformations": {},
+                    "custom_transformations": {},
+                },
             },
             id="should skip all stages if not given config",
         ),
@@ -298,8 +341,11 @@ def test_basic_pipeline(raw_data, config, custom_transformation_fns, expected_re
     run_pipeline(io, config, custom_transformation_fns)
 
     valid_dst_path = abs_path(config["valid_dst_path"])
-    invalid_dst_path = abs_path(config["invalid_dst_path"])
-
     assert io.files[valid_dst_path].to_dicts() == expected_result[valid_dst_path]
+
+    invalid_dst_path = abs_path(config["invalid_dst_path"])
     if invalid_dst_path in io.files:
         assert io.files[invalid_dst_path].to_dicts() == expected_result[invalid_dst_path]
+
+    config_dst_path = abs_path("./path/to/ingest_20251016_1200.yaml")
+    assert io.files[config_dst_path] == expected_result[config_dst_path]
