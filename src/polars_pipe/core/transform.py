@@ -2,17 +2,29 @@ import inspect
 from collections.abc import Callable
 from datetime import datetime
 from functools import partial
+from types import MappingProxyType
 from typing import Any
 
 import polars as pl
+import polars.datatypes.classes as pl_dtypes
+from polars.datatypes._parse import is_polars_dtype
 
 from polars_pipe.core import derive_cols
 from polars_pipe.core.logger import logger
 
+POLARS_DTYPE_MAPPING = MappingProxyType(
+    {k: v for k, v in inspect.getmembers(pl_dtypes) if is_polars_dtype(v)}
+)
 
-def add_process_cols(lf: pl.LazyFrame, guid: str, date_time: datetime) -> pl.LazyFrame:
+
+def add_process_cols(
+    lf: pl.LazyFrame, guid: str, date_time: datetime, process_name: str = "process"
+) -> pl.LazyFrame:
     return lf.with_columns(
-        [pl.lit(guid).alias("process_guid"), pl.lit(date_time).alias("process_datetime")]
+        [
+            pl.lit(guid).alias(f"{process_name}_guid"),
+            pl.lit(date_time).alias(f"{process_name}_datetime"),
+        ]
     )
 
 

@@ -473,6 +473,7 @@ dependencies = [
     { name = "hypothesis" },
     { name = "polars" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "repo-mapper-rs" },
 ]
 
@@ -491,6 +492,7 @@ requires-dist = [
     { name = "hypothesis", specifier = ">=6.142.0" },
     { name = "polars", specifier = ">=1.34.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "repo-mapper-rs", specifier = ">=0.3.0" },
 ]
 

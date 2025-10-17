@@ -3,11 +3,13 @@ from __future__ import annotations
 import datetime
 from abc import ABC, abstractmethod
 from enum import Enum
+from pathlib import Path
 from types import MappingProxyType
 from uuid import uuid4
 
 import attrs
 import polars as pl
+import yaml
 from attrs.validators import instance_of
 
 from polars_pipe.core.logger import logger
@@ -17,6 +19,7 @@ class FileType(Enum):
     JSON = "json"
     PARQUET = "parquet"
     CSV = "csv"
+    YAML = "yaml"
 
 
 READ_FUNCS = {
@@ -30,9 +33,11 @@ def write_parquet(df: pl.DataFrame, path: str, **kwargs: dict) -> None:
     df.write_parquet(path, **kwargs)
 
 
-WRITE_FUNCS = {
-    FileType.PARQUET: write_parquet,
-}
+def write_yaml(data: dict, path: str, **kwargs: dict) -> None:
+    Path(path).write_text(yaml.safe_dump(data, sort_keys=False, **kwargs))
+
+
+WRITE_FUNCS = {FileType.PARQUET: write_parquet, FileType.YAML: write_yaml}
 
 
 @attrs.define
@@ -46,7 +51,7 @@ class IOBase(ABC):
         return self._read_funcs[file_type](path, **kwargs)
 
     def write(self, df: pl.DataFrame, path: str, file_type: FileType | str, **kwargs: dict) -> None:
-        logger.debug(f"{df.shape = } {path = } {file_type = } {kwargs = }")
+        logger.debug(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._write_funcs:

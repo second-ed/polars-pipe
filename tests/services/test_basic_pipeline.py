@@ -4,7 +4,7 @@ import polars as pl
 import pytest
 
 from polars_pipe.adapters.io_pl import FakeIOWrapper
-from polars_pipe.services.basic_pipeline import run_pipeline
+from polars_pipe.services.basic_pipeline import abs_path, run_pipeline
 
 BASIC_INPUT_DF = pl.DataFrame(
     [
@@ -62,8 +62,8 @@ EXPECTED_TRANSFORMED_DF = [
         "project b": 0.5,
         "project c": None,
         "project d": None,
-        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-        "process_guid": "abc-123",
+        "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "ingest_guid": "abc-123",
         "custom_transformation_status": "applied",
     },
     {
@@ -73,8 +73,8 @@ EXPECTED_TRANSFORMED_DF = [
         "project b": None,
         "project c": 1.0,
         "project d": 0.0,
-        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-        "process_guid": "abc-123",
+        "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "ingest_guid": "abc-123",
         "custom_transformation_status": "applied",
     },
     {
@@ -84,8 +84,8 @@ EXPECTED_TRANSFORMED_DF = [
         "project b": 0.35,
         "project c": None,
         "project d": None,
-        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-        "process_guid": "abc-123",
+        "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "ingest_guid": "abc-123",
         "custom_transformation_status": "applied",
     },
     {
@@ -95,8 +95,8 @@ EXPECTED_TRANSFORMED_DF = [
         "project b": 0.05,
         "project c": None,
         "project d": None,
-        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-        "process_guid": "abc-123",
+        "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "ingest_guid": "abc-123",
         "custom_transformation_status": "applied",
     },
     {
@@ -106,8 +106,8 @@ EXPECTED_TRANSFORMED_DF = [
         "project b": None,
         "project c": 0.5,
         "project d": 0.5,
-        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-        "process_guid": "abc-123",
+        "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "ingest_guid": "abc-123",
         "custom_transformation_status": "applied",
     },
 ]
@@ -125,8 +125,8 @@ EXPECTED_ERROR_RECORDS = [
             "project c": 0.45,
             "project d": 0.55,
         },
-        "process_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-        "process_guid": "abc-123",
+        "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+        "ingest_guid": "abc-123",
         "error_reason": "missing name",
     }
 ]
@@ -140,12 +140,14 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
     ("raw_data", "config", "custom_transformation_fns", "expected_result"),
     [
         pytest.param(
-            {"path/to/raw_data.parquet": BASIC_INPUT_DF},
+            {abs_path("./path/to/raw_data.parquet"): BASIC_INPUT_DF},
             {
-                "src_path": "path/to/raw_data.parquet",
+                "process_name": "ingest",
+                "src_path": "./path/to/raw_data.parquet",
                 "src_file_type": "parquet",
-                "valid_dst_path": "path/to/transformed_data.parquet",
-                "invalid_dst_path": "path/to/error_records.parquet",
+                "valid_dst_path": "./path/to/transformed_data.parquet",
+                "invalid_dst_path": "./path/to/error_records.parquet",
+                "config_dst_dir": "./path/to",
                 "validation": {"missing name": ["name", "is_not_null", None]},
                 "transformations": {
                     "filter_exprs": {"no d division": ["division", "ne", "D"]},
@@ -169,24 +171,26 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
             },
             {"mock_custom_transformation": mock_custom_transformation},
             {
-                "path/to/transformed_data.parquet": EXPECTED_TRANSFORMED_DF,
-                "path/to/error_records.parquet": EXPECTED_ERROR_RECORDS,
+                abs_path("path/to/transformed_data.parquet"): EXPECTED_TRANSFORMED_DF,
+                abs_path("path/to/error_records.parquet"): EXPECTED_ERROR_RECORDS,
             },
             id="transforms and filters dfs when given populated config",
         ),
         pytest.param(
-            {"path/to/raw_data.parquet": BASIC_INPUT_DF},
+            {abs_path("./path/to/raw_data.parquet"): BASIC_INPUT_DF},
             {
-                "src_path": "path/to/raw_data.parquet",
+                "process_name": "ingest",
+                "src_path": "./path/to/raw_data.parquet",
                 "src_file_type": "parquet",
-                "valid_dst_path": "path/to/transformed_data.parquet",
-                "invalid_dst_path": "path/to/error_records.parquet",
+                "valid_dst_path": "./path/to/transformed_data.parquet",
+                "invalid_dst_path": "./path/to/error_records.parquet",
+                "config_dst_dir": "./path/to",
                 "validation": {},
                 "transformations": {},
             },
             None,
             {
-                "path/to/transformed_data.parquet": [
+                abs_path("./path/to/transformed_data.parquet"): [
                     {
                         "name": "alice",
                         "salary": 30000,
@@ -198,10 +202,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                             "project c": None,
                             "project d": None,
                         },
-                        "process_datetime": datetime.datetime(
+                        "ingest_datetime": datetime.datetime(
                             2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                         ),
-                        "process_guid": "abc-123",
+                        "ingest_guid": "abc-123",
                     },
                     {
                         "name": "ben",
@@ -214,10 +218,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                             "project c": 1.0,
                             "project d": 0.0,
                         },
-                        "process_datetime": datetime.datetime(
+                        "ingest_datetime": datetime.datetime(
                             2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                         ),
-                        "process_guid": "abc-123",
+                        "ingest_guid": "abc-123",
                     },
                     {
                         "name": "charlie",
@@ -230,10 +234,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                             "project c": None,
                             "project d": None,
                         },
-                        "process_datetime": datetime.datetime(
+                        "ingest_datetime": datetime.datetime(
                             2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                         ),
-                        "process_guid": "abc-123",
+                        "ingest_guid": "abc-123",
                     },
                     {
                         "name": None,
@@ -246,10 +250,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                             "project c": 0.45,
                             "project d": 0.55,
                         },
-                        "process_datetime": datetime.datetime(
+                        "ingest_datetime": datetime.datetime(
                             2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                         ),
-                        "process_guid": "abc-123",
+                        "ingest_guid": "abc-123",
                     },
                     {
                         "name": "dani",
@@ -262,10 +266,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                             "project c": None,
                             "project d": None,
                         },
-                        "process_datetime": datetime.datetime(
+                        "ingest_datetime": datetime.datetime(
                             2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                         ),
-                        "process_guid": "abc-123",
+                        "ingest_guid": "abc-123",
                     },
                     {
                         "name": "emily",
@@ -278,10 +282,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                             "project c": 0.5,
                             "project d": 0.5,
                         },
-                        "process_datetime": datetime.datetime(
+                        "ingest_datetime": datetime.datetime(
                             2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                         ),
-                        "process_guid": "abc-123",
+                        "ingest_guid": "abc-123",
                     },
                 ],
             },
@@ -292,11 +296,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
 def test_basic_pipeline(raw_data, config, custom_transformation_fns, expected_result):
     io = FakeIOWrapper(files=raw_data)
     run_pipeline(io, config, custom_transformation_fns)
-    assert (
-        io.files[config["valid_dst_path"]].to_dicts() == expected_result[config["valid_dst_path"]]
-    )
-    if config["invalid_dst_path"] in io.files:
-        assert (
-            io.files[config["invalid_dst_path"]].to_dicts()
-            == expected_result[config["invalid_dst_path"]]
-        )
+
+    valid_dst_path = abs_path(config["valid_dst_path"])
+    invalid_dst_path = abs_path(config["invalid_dst_path"])
+
+    assert io.files[valid_dst_path].to_dicts() == expected_result[valid_dst_path]
+    if invalid_dst_path in io.files:
+        assert io.files[invalid_dst_path].to_dicts() == expected_result[invalid_dst_path]

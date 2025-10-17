@@ -1,27 +1,27 @@
 from __future__ import annotations
 
-import inspect
 from collections.abc import Callable
 from copy import deepcopy
-from types import MappingProxyType
+from pathlib import Path
 from typing import Self
 
 import attrs
-import polars.datatypes.classes as pl_dtypes
-from polars.datatypes._parse import is_polars_dtype
 
 import polars_pipe.adapters.io_pl as io
 import polars_pipe.core.transform as tf
 import polars_pipe.core.validation as vl
 
-POLARS_DTYPE_MAPPING = MappingProxyType(
-    {k: v for k, v in inspect.getmembers(pl_dtypes) if is_polars_dtype(v)}
-)
+
+def abs_path(path: str) -> str:
+    return str(Path(path).absolute())
 
 
 @attrs.define
 class GeneralConfig:
-    src_path: str = attrs.field(validator=attrs.validators.instance_of(str))
+    guid: str = attrs.field(validator=attrs.validators.instance_of(str))
+    date_time: str = attrs.field(validator=attrs.validators.instance_of(str), converter=str)
+    process_name: str = attrs.field(validator=attrs.validators.instance_of(str))
+    src_path: str = attrs.field(validator=attrs.validators.instance_of(str), converter=abs_path)
     src_file_type: str = attrs.field(
         validator=[
             attrs.validators.instance_of(str),
@@ -29,13 +29,23 @@ class GeneralConfig:
         ],
         converter=str.upper,
     )
-    valid_dst_path: str = attrs.field(validator=attrs.validators.instance_of(str))
-    invalid_dst_path: str = attrs.field(validator=attrs.validators.instance_of(str))
+    valid_dst_path: str = attrs.field(
+        validator=attrs.validators.instance_of(str), converter=abs_path
+    )
+    invalid_dst_path: str = attrs.field(
+        validator=attrs.validators.instance_of(str), converter=abs_path
+    )
+    config_dst_dir: str = attrs.field(
+        validator=attrs.validators.instance_of(str), converter=abs_path
+    )
     validation: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     transformations: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     custom_transformations: dict = attrs.field(
         factory=dict, validator=attrs.validators.instance_of(dict)
     )
+
+    def to_dict(self) -> dict:
+        return attrs.asdict(self)
 
 
 @attrs.define
@@ -57,7 +67,7 @@ class TransformConfig:
             vl.parse_validation_config(config.get("filter_exprs", {})).values()
         )
         config["recast_map"] = {
-            k: POLARS_DTYPE_MAPPING[v] for k, v in config.get("recast_map", {}).items()
+            k: tf.POLARS_DTYPE_MAPPING[v] for k, v in config.get("recast_map", {}).items()
         }
         return cls(**config)
 
@@ -69,6 +79,11 @@ def run_pipeline(
 ) -> None:
     custom_transformation_fns = custom_transformation_fns or {}
 
+    guid = io_wrapper.get_guid()
+    date_time = io_wrapper.get_datetime()
+    config["guid"] = guid
+    config["date_time"] = date_time
+
     parsed_config = GeneralConfig(**config)
 
     file_type = io.FileType._member_map_[parsed_config.src_file_type]
@@ -79,7 +94,12 @@ def run_pipeline(
 
     valid_lf, invalid_lf = (
         lf.pipe(vl.check_expected_cols, expected_cols=expected_cols)
-        .pipe(tf.add_process_cols, guid=io_wrapper.get_guid(), date_time=io_wrapper.get_datetime())
+        .pipe(
+            tf.add_process_cols,
+            guid=guid,
+            date_time=date_time,
+            process_name=parsed_config.process_name,
+        )
         .pipe(vl.validate_df, rules=rules)
     )
     tf_config = TransformConfig.from_dict(parsed_config.transformations)
@@ -102,6 +122,13 @@ def run_pipeline(
     )
 
     transformed_df = pipeline_plan.collect()
+    io_wrapper.write(
+        parsed_config.to_dict(),
+        Path(parsed_config.config_dst_dir).joinpath(
+            f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
+        ),
+        file_type=io.FileType.YAML,
+    )
     io_wrapper.write(transformed_df, parsed_config.valid_dst_path, file_type=io.FileType.PARQUET)
 
     invalid_df = invalid_lf.collect()
