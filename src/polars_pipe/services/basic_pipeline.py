@@ -82,9 +82,8 @@ def run_pipeline(
 ) -> None:
     custom_transformation_fns = custom_transformation_fns or {}
 
-    guid = io_wrapper.get_guid()
     date_time = io_wrapper.get_datetime()
-    config["guid"] = guid
+    config["guid"] = io_wrapper.get_guid()
     config["date_time"] = date_time
 
     parsed_config = GeneralConfig(**config)
@@ -99,7 +98,7 @@ def run_pipeline(
         lf.pipe(vl.check_expected_cols, expected_cols=expected_cols)
         .pipe(
             tf.add_process_cols,
-            guid=guid,
+            guid=parsed_config.guid,
             date_time=date_time,
             process_name=parsed_config.process_name,
         )
