@@ -202,6 +202,44 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                     "custom_transformations": {
                         "mock_custom_transformation": {"status": "applied"},
                     },
+                    "pipeline_plan": " WITH_COLUMNS:\n"
+                    ' ["applied".alias("custom_transformation_status")] \n'
+                    '  simple π 8/8 ["name", "project a", ... 6 other columns]\n'
+                    "     WITH_COLUMNS:\n"
+                    '     [col("salary").as_struct([col("annual_bonus"), '
+                    'col("full_comp")]).alias("comp")] \n'
+                    "       WITH_COLUMNS:\n"
+                    '       [[(col("salary")) + (col("annual_bonus"))].alias("full_comp")] \n'
+                    "         WITH_COLUMNS:\n"
+                    '         [col("annual_bonus").clip([dyn int: 0, dyn int: 500000])] \n'
+                    '          SELECT [col("name"), col("salary"), '
+                    'col("bonus").alias("annual_bonus"), col("project a"), col("project b"), '
+                    'col("project c"), col("project d"), col("ingest_guid"), '
+                    'col("ingest_datetime")]\n'
+                    "             WITH_COLUMNS:\n"
+                    '             [col("bonus").strict_cast(Int64)] \n'
+                    "               WITH_COLUMNS:\n"
+                    '               [col("project a"), col("project b"), col("project c"), '
+                    'col("project d"), col("bonus").fill_null([0.0])] \n'
+                    "                UNNEST by:[projects]\n"
+                    '                  FILTER [(col("division")) != ("D")]\n'
+                    "                  FROM\n"
+                    "                     WITH_COLUMNS:\n"
+                    "                     "
+                    '[col("name").str.strip_chars([null]).str.lowercase(), '
+                    'col("division").str.strip_chars([null]).str.lowercase(), '
+                    'col("ingest_guid").str.strip_chars([null]).str.lowercase()] \n'
+                    '                      simple π 7/7 ["name", "salary", "division", ... 4 '
+                    "other columns]\n"
+                    '                        FILTER [(col("error_reason")) == ("")]\n'
+                    "                        FROM\n"
+                    "                           WITH_COLUMNS:\n"
+                    '                           ["abc-123".alias("ingest_guid"), 2025-10-16 '
+                    '12:00:00.dt.replace_time_zone(["earliest"]).alias("ingest_datetime"), '
+                    'when(col("name").is_null()).then("missing '
+                    'name").otherwise("").str.concat_horizontal().str.strip_chars([","]).alias("error_reason")] \n'
+                    '                            DF ["name", "salary", "division", "bonus", '
+                    '...]; PROJECT["name", "salary", "division", "bonus", ...] 5/5 COLUMNS',
                 },
             },
             id="transforms and filters dfs when given populated config",
@@ -330,6 +368,14 @@ def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
                     "validation": {},
                     "transformations": {},
                     "custom_transformations": {},
+                    "pipeline_plan": " WITH_COLUMNS:\n"
+                    ' [col("ingest_guid").str.strip_chars([null]).str.lowercase()] \n'
+                    "   WITH_COLUMNS:\n"
+                    '   ["abc-123".alias("ingest_guid"), 2025-10-16 '
+                    '12:00:00.dt.replace_time_zone(["earliest"]).alias("ingest_datetime"), '
+                    'col("name").str.strip_chars([null]).str.lowercase(), '
+                    'col("division").str.strip_chars([null]).str.lowercase()] \n'
+                    '    DF ["name", "salary", "division", "bonus", ...]; PROJECT */5 COLUMNS',
                 },
             },
             id="should skip all stages if not given config",

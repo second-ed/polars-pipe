@@ -45,6 +45,7 @@ class GeneralConfig:
     custom_transformations: dict = attrs.field(
         factory=dict, validator=attrs.validators.instance_of(dict)
     )
+    pipeline_plan: str = attrs.field(default="", validator=attrs.validators.instance_of(str))
 
     def to_dict(self) -> dict:
         return attrs.asdict(self)
@@ -122,6 +123,8 @@ def run_pipeline(
     pipeline_plan = tf.pipe_custom_transformations(
         pipeline_plan, custom_transformation_fns, parsed_config.custom_transformations
     )
+
+    parsed_config.pipeline_plan = pipeline_plan.explain()
 
     transformed_df = pipeline_plan.collect()
     io_wrapper.write(
