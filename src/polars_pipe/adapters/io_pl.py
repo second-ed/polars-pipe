@@ -84,7 +84,7 @@ class IOWrapper(IOBase):
     )
 
     def get_guid(self) -> str:
-        return f"{uuid4()}"
+        return str(uuid4())
 
     def get_datetime(self) -> datetime.datetime:
         return datetime.datetime.now(datetime.UTC)
