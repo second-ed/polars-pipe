@@ -47,6 +47,11 @@ class GeneralConfig:
     )
     pipeline_plan: str = attrs.field(default="", validator=attrs.validators.instance_of(str))
 
+    @classmethod
+    def from_dict(cls, config: dict) -> Self:
+        filtered = {f.name: config[f.name] for f in attrs.fields(cls) if f.name in config}
+        return cls(**filtered)
+
     def to_dict(self) -> dict:
         return attrs.asdict(self)
 
@@ -86,7 +91,7 @@ def run_pipeline(
     config["guid"] = io_wrapper.get_guid()
     config["date_time"] = date_time
 
-    parsed_config = GeneralConfig(**config)
+    parsed_config = GeneralConfig.from_dict(config)
 
     file_type = io.FileType._member_map_[parsed_config.src_file_type]
     lf = io_wrapper.read(parsed_config.src_path, file_type).lazy()
