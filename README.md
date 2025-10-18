@@ -10,6 +10,7 @@
 │   └── polars_pipe
 │       ├── adapters
 │       │   ├── __init__.py
+│       │   ├── io_funcs.py
 │       │   └── io_pl.py
 │       ├── core
 │       │   ├── __init__.py
