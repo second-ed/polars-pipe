@@ -132,7 +132,7 @@ EXPECTED_ERROR_RECORDS = [
 ]
 
 
-def mock_custom_transformation(lf: pl.LazyFrame, status) -> pl.LazyFrame:
+def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
     return lf.with_columns(pl.lit(status).alias("custom_transformation_status"))
 
 
