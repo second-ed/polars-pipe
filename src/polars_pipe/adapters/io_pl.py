@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import datetime
+import math
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
@@ -23,18 +25,23 @@ class FileType(Enum):
 
 
 READ_FUNCS = {
-    FileType.JSON: pl.read_json,
-    FileType.PARQUET: pl.read_parquet,
-    FileType.CSV: pl.read_csv,
+    FileType.JSON: pl.scan_ndjson,
+    FileType.PARQUET: pl.scan_parquet,
+    FileType.CSV: pl.scan_csv,
 }
+
+WriteFn = Callable[[pl.DataFrame | dict, str, dict], None]
 
 
 def write_parquet(df: pl.DataFrame, path: str, **kwargs: dict) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(path, **kwargs)
 
 
 def write_yaml(data: dict, path: str, **kwargs: dict) -> None:
-    Path(path).write_text(yaml.safe_dump(data, sort_keys=False, **kwargs))
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=False, **kwargs))
 
 
 WRITE_FUNCS = {FileType.PARQUET: write_parquet, FileType.YAML: write_yaml}
@@ -42,7 +49,7 @@ WRITE_FUNCS = {FileType.PARQUET: write_parquet, FileType.YAML: write_yaml}
 
 @attrs.define
 class IOBase(ABC):
-    def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.DataFrame:
+    def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.LazyFrame:
         logger.debug(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
 
@@ -50,13 +57,23 @@ class IOBase(ABC):
             raise NotImplementedError(f"`read` is not implemented for {file_type}")
         return self._read_funcs[file_type](path, **kwargs)
 
-    def write(self, df: pl.DataFrame, path: str, file_type: FileType | str, **kwargs: dict) -> None:
+    def write(
+        self, data: pl.LazyFrame | dict, path: str, file_type: FileType | str, **kwargs: dict
+    ) -> None:
         logger.debug(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._write_funcs:
             raise NotImplementedError(f"`write` is not implemented for {file_type}")
-        return self._write_funcs[file_type](df, path, **kwargs)
+        if file_type == FileType.YAML:
+            return self._write_funcs[file_type](data, path, **kwargs)
+        return self._sink_in_chunks(
+            data,
+            write_func=self._write_funcs[file_type],
+            ext=file_type.value,
+            base_path=path,
+            fwd_kwargs=kwargs,
+        )
 
     def _get_file_type(self, file_type: FileType | str) -> FileType:
         return (
@@ -64,6 +81,32 @@ class IOBase(ABC):
             if isinstance(file_type, FileType)
             else FileType._member_map_[file_type.strip().upper()]
         )
+
+    def _sink_in_chunks(  # noqa: PLR0913
+        self,
+        lf: pl.LazyFrame,
+        write_func: WriteFn,
+        ext: str,
+        base_path: str | Path,
+        target_size_gb: float | None = 1.0,
+        fwd_kwargs: dict | None = None,
+    ) -> None:
+        fwd_kwargs = fwd_kwargs or {}
+        base_path: Path = Path(base_path)
+
+        sample = lf.slice(0, 10_000).collect()
+        avg_row_size = sample.estimated_size() / sample.height
+        rows_per_chunk = int((target_size_gb * 1e9) / avg_row_size)
+
+        total_rows = lf.select(pl.len()).collect().item()
+        n_chunks = math.ceil(total_rows / rows_per_chunk)
+
+        for i in range(n_chunks):
+            offset = i * rows_per_chunk
+            length = min(rows_per_chunk, total_rows - offset)
+            chunk_df = lf.slice(offset, length).collect()
+            part_path = base_path / f"part-{i:05d}-{self.get_guid()}.{ext.lower()}"
+            write_func(chunk_df, part_path, **fwd_kwargs)
 
     @abstractmethod
     def get_guid(self) -> str:
@@ -104,11 +147,11 @@ class FakeIOWrapper(IOBase):
         self._read_funcs = MappingProxyType(dict.fromkeys(READ_FUNCS, self._read_fn))
         self._write_funcs = MappingProxyType(dict.fromkeys(WRITE_FUNCS, self._write_fn))
 
-    def _read_fn(self, path: str) -> pl.DataFrame:
+    def _read_fn(self, path: str) -> pl.LazyFrame:
         return self.files[path]
 
     def _write_fn(self, df: pl.DataFrame, path: str) -> None:
-        self.files[path] = df
+        self.files[str(path)] = df
 
     def get_guid(self) -> str:
         return "abc-123"

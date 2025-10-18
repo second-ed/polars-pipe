@@ -106,7 +106,7 @@ def run_pipeline(
     )
     tf_config = TransformConfig.from_dict(parsed_config.transformations)
 
-    pipeline_plan = (
+    transformed_lf = (
         valid_lf.pipe(tf.normalise_str_cols)
         .pipe(tf.unnest_df_cols, tf_config.unnest_cols)
         .pipe(tf.filter_df, filter_exprs=tf_config.filter_exprs)
@@ -119,13 +119,12 @@ def run_pipeline(
         .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
     )
 
-    pipeline_plan = tf.pipe_custom_transformations(
-        pipeline_plan, custom_transformation_fns, parsed_config.custom_transformations
+    transformed_lf = tf.pipe_custom_transformations(
+        transformed_lf, custom_transformation_fns, parsed_config.custom_transformations
     )
 
-    parsed_config.pipeline_plan = pipeline_plan.explain()
+    parsed_config.pipeline_plan = transformed_lf.explain()
 
-    transformed_df = pipeline_plan.collect()
     io_wrapper.write(
         parsed_config.to_dict(),
         str(
@@ -135,8 +134,7 @@ def run_pipeline(
         ),
         file_type=io.FileType.YAML,
     )
-    io_wrapper.write(transformed_df, parsed_config.valid_dst_path, file_type=io.FileType.PARQUET)
+    io_wrapper.write(transformed_lf, parsed_config.valid_dst_path, file_type=io.FileType.PARQUET)
 
-    invalid_df = invalid_lf.collect()
-    if not invalid_df.is_empty():
-        io_wrapper.write(invalid_df, parsed_config.invalid_dst_path, file_type=io.FileType.PARQUET)
+    if invalid_lf.limit(1).collect().height > 0:
+        io_wrapper.write(invalid_lf, parsed_config.invalid_dst_path, file_type=io.FileType.PARQUET)
