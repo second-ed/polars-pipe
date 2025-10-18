@@ -116,7 +116,8 @@ class FakeIOWrapper(IOBase):
         self._write_funcs = MappingProxyType(dict.fromkeys(WRITE_FUNCS, self._write_fn))
 
     def _read_fn(self, path: str) -> pl.LazyFrame:
-        return self.files[path]
+        data = self.files[path]
+        return data.lazy() if isinstance(data, pl.DataFrame) else data
 
     def _write_fn(self, df: pl.DataFrame, path: str) -> None:
         self.files[str(path)] = df
