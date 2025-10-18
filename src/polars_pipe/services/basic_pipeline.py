@@ -56,7 +56,7 @@ class GeneralConfig:
         return attrs.asdict(self)
 
 
-@attrs.define
+@attrs.define(frozen=True)
 class TransformConfig:
     drop_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     rename_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
