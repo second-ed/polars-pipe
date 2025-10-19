@@ -4,7 +4,8 @@ import polars as pl
 import pytest
 
 from polars_pipe.adapters.io_pl import FakeIOWrapper
-from polars_pipe.services.basic_pipeline import abs_path, run_pipeline
+from polars_pipe.core.config import abs_path
+from polars_pipe.services.basic_pipeline import run_pipeline
 
 BASIC_INPUT_DF = pl.DataFrame(
     [

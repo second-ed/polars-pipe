@@ -16,7 +16,7 @@ class FileType(Enum):
 
 
 READ_FUNCS = {
-    FileType.JSON: pl.scan_ndjson,
+    FileType.JSON: pl.read_json,
     FileType.PARQUET: pl.scan_parquet,
     FileType.CSV: pl.scan_csv,
 }

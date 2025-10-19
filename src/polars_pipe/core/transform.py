@@ -1,20 +1,49 @@
+from __future__ import annotations
+
 import inspect
 from collections.abc import Callable
+from copy import deepcopy
 from datetime import datetime
 from functools import partial
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Self
 
+import attrs
 import polars as pl
 import polars.datatypes.classes as pl_dtypes
 from polars.datatypes._parse import is_polars_dtype
 
+import polars_pipe.core.validation as vl
 from polars_pipe.core import derive_cols
 from polars_pipe.core.logger import logger
 
 POLARS_DTYPE_MAPPING = MappingProxyType(
     {k: v for k, v in inspect.getmembers(pl_dtypes) if is_polars_dtype(v)}
 )
+
+
+@attrs.define(frozen=True)
+class TransformConfig:
+    drop_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
+    rename_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    recast_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    fill_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    clip_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    filter_exprs: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
+    new_col_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    unnest_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
+    nest_cols: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+
+    @classmethod
+    def from_dict(cls, config: dict) -> Self:
+        config = deepcopy(config)
+        config["filter_exprs"] = list(
+            vl.parse_validation_config(config.get("filter_exprs", {})).values()
+        )
+        config["recast_map"] = {
+            k: POLARS_DTYPE_MAPPING[v] for k, v in config.get("recast_map", {}).items()
+        }
+        return cls(**config)
 
 
 def add_process_cols(
