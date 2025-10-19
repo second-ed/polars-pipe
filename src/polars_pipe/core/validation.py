@@ -45,13 +45,13 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
         "drop_cols": collect_original_names_dict_keys_or_list,
     }
 
-    expected_cols = set()
-
     reverse_rename_map = {
         new: old for old, new in parsed_config.transformations.get("rename_map", {}).items()
     }
 
     new_cols = list(parsed_config.transformations.get("new_col_map", {}))
+
+    expected_cols = set()
 
     for stage_name, stage_param_map in parsed_config.transformations.items():
         expected_cols.update(
