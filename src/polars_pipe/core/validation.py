@@ -68,9 +68,10 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
 
 def check_expected_cols(lf: pl.LazyFrame, expected_cols: Iterable[str]) -> pl.LazyFrame:
     logger.info(f"{expected_cols = }")
-    missing = [c for c in expected_cols if c not in lf.collect_schema().names()]
+    actual_schema = lf.collect_schema().names()
+    missing = [c for c in expected_cols if c not in actual_schema]
     if missing:
-        raise ValueError(f"Missing required columns: {missing}")
+        raise ValueError(f"Missing required columns: {missing = } {actual_schema = }")
     return lf
 
 
