@@ -9,7 +9,7 @@ from uuid import uuid4
 
 import attrs
 import polars as pl
-from attrs.validators import instance_of
+from attrs.validators import instance_of, optional
 
 from polars_pipe.adapters.io_funcs import READ_FUNCS, WRITE_FUNCS, FileType, WriteFn
 from polars_pipe.core.logger import logger
@@ -17,6 +17,8 @@ from polars_pipe.core.logger import logger
 
 @attrs.define
 class IOBase(ABC):
+    guid: str | None = attrs.field(default=None, validator=optional(instance_of(str)))
+
     def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.LazyFrame:
         logger.debug(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
@@ -77,8 +79,11 @@ class IOBase(ABC):
             write_func(chunk_df, part_path, **fwd_kwargs)
 
     @abstractmethod
-    def get_guid(self) -> str:
+    def new_guid(self) -> str:
         pass
+
+    def get_guid(self) -> str:
+        return self.guid if self.guid is not None else self.new_guid()
 
     @abstractmethod
     def get_datetime(self) -> datetime.datetime:
@@ -94,8 +99,9 @@ class IOWrapper(IOBase):
         default=WRITE_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
     )
 
-    def get_guid(self) -> str:
-        return str(uuid4())
+    def new_guid(self) -> str:
+        self.guid = str(uuid4())
+        return self.guid
 
     def get_datetime(self) -> datetime.datetime:
         return datetime.datetime.now(datetime.UTC)
@@ -122,8 +128,9 @@ class FakeIOWrapper(IOBase):
     def _write_fn(self, df: pl.DataFrame, path: str) -> None:
         self.files[str(path)] = df
 
-    def get_guid(self) -> str:
-        return "abc-123"
+    def new_guid(self) -> str:
+        self.guid = "abc-123"
+        return self.guid
 
     def get_datetime(self) -> datetime.datetime:
         return datetime.datetime(2025, 10, 16, 12, tzinfo=datetime.UTC)
