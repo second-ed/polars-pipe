@@ -27,6 +27,13 @@ class GeneralConfig:
         ],
         converter=str.upper,
     )
+    dst_file_type: str = attrs.field(
+        validator=[
+            attrs.validators.instance_of(str),
+            attrs.validators.in_(io.FileType._member_map_),
+        ],
+        converter=str.upper,
+    )
     valid_dst_path: str = attrs.field(
         validator=attrs.validators.instance_of(str), converter=abs_path
     )
