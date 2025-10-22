@@ -24,7 +24,9 @@ class IOBase(ABC):
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._read_funcs:
-            raise NotImplementedError(f"`read` is not implemented for {file_type}")
+            msg = f"`read` is not implemented for {file_type}"
+            logger.error(msg)
+            raise NotImplementedError(msg)
         return self._read_funcs[file_type](path, **kwargs)
 
     def write(
@@ -34,7 +36,9 @@ class IOBase(ABC):
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._write_funcs:
-            raise NotImplementedError(f"`write` is not implemented for {file_type}")
+            msg = f"`write` is not implemented for {file_type}"
+            logger.error(msg)
+            raise NotImplementedError(msg)
         if file_type == FileType.YAML:
             return self._write_funcs[file_type](data, path, **kwargs)
         return self._sink_in_chunks(

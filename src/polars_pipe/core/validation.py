@@ -48,6 +48,7 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
     reverse_rename_map = {
         new: old for old, new in parsed_config.transformations.get("rename_map", {}).items()
     }
+    logger.info(f"{reverse_rename_map = }")
 
     new_cols = list(parsed_config.transformations.get("new_col_map", {}))
 
@@ -63,6 +64,7 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
     expected_cols.update(
         collect_original_names_expr(parsed_config.validation, reverse_rename_map, new_cols)
     )
+    logger.info(f"{expected_cols = }")
     return expected_cols
 
 
@@ -71,7 +73,9 @@ def check_expected_cols(lf: pl.LazyFrame, expected_cols: Iterable[str]) -> pl.La
     actual_schema = lf.collect_schema().names()
     missing = [c for c in expected_cols if c not in actual_schema]
     if missing:
-        raise ValueError(f"Missing required columns: {missing = } {actual_schema = }")
+        msg = f"Missing required columns: {missing = } {actual_schema = }"
+        logger.error(msg)
+        raise ValueError(msg)
     return lf
 
 
