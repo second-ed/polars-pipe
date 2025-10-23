@@ -24,18 +24,15 @@ def run_pipeline(
         parsed_config.src_path, file_type=io.FileType.from_str(parsed_config.src_file_type)
     ).lazy()
 
-    rules = vl.parse_validation_config(parsed_config.validation)
-    expected_cols = vl.extract_expected_cols(parsed_config)
-
     valid_lf, invalid_lf = (
-        lf.pipe(vl.check_expected_cols, expected_cols=expected_cols)
+        lf.pipe(vl.check_expected_cols, expected_cols=vl.extract_expected_cols(parsed_config))
         .pipe(
             tf.add_process_cols,
             guid=parsed_config.guid,
             date_time=date_time,
             process_name=parsed_config.process_name,
         )
-        .pipe(vl.validate_df, rules=rules)
+        .pipe(vl.validate_df, rules=vl.parse_validation_config(parsed_config.validation))
     )
     tf_config = tf.TransformConfig.from_dict(parsed_config.transformations)
 
@@ -61,11 +58,8 @@ def run_pipeline(
 
     io_wrapper.write(
         parsed_config.to_dict(),
-        str(
-            Path(parsed_config.config_dst_dir).joinpath(
-                f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
-            )
-        ),
+        Path(parsed_config.config_dst_dir)
+        / f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
         file_type=io.FileType.YAML,
     )
 
