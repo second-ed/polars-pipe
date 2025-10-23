@@ -54,7 +54,7 @@ def run_pipeline(
         transformed_lf, custom_transformation_fns, parsed_config.custom_transformations
     )
 
-    parsed_config.pipeline_plan = transformed_lf.explain()
+    parsed_config.pipeline_plan = transformed_lf.explain().splitlines()
 
     io_wrapper.write(
         parsed_config.to_dict(),

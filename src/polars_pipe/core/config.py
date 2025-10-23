@@ -48,7 +48,7 @@ class GeneralConfig:
     custom_transformations: dict = attrs.field(
         factory=dict, validator=attrs.validators.instance_of(dict)
     )
-    pipeline_plan: str = attrs.field(default="", validator=attrs.validators.instance_of(str))
+    pipeline_plan: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
 
     @classmethod
     def from_dict(cls, config: dict) -> Self:
