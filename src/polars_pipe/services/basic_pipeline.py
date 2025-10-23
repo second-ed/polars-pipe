@@ -21,7 +21,7 @@ def run_pipeline(
     parsed_config = cf.GeneralConfig.from_dict(config)
 
     lf = io_wrapper.read(
-        parsed_config.src_path, file_type=io.FileType._member_map_[parsed_config.src_file_type]
+        parsed_config.src_path, file_type=io.FileType.from_str(parsed_config.src_file_type)
     ).lazy()
 
     rules = vl.parse_validation_config(parsed_config.validation)
@@ -69,7 +69,7 @@ def run_pipeline(
         file_type=io.FileType.YAML,
     )
 
-    dst_file_type = io.FileType._member_map_[parsed_config.dst_file_type]
+    dst_file_type = io.FileType.from_str(parsed_config.dst_file_type)
     io_wrapper.write(transformed_lf, parsed_config.valid_dst_path, file_type=dst_file_type)
 
     if invalid_lf.limit(1).collect().height > 0:

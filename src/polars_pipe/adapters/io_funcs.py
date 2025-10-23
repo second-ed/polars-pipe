@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
+from typing import Self
 
 import polars as pl
 import yaml
@@ -13,6 +14,10 @@ class FileType(Enum):
     PARQUET = "parquet"
     CSV = "csv"
     YAML = "yaml"
+
+    @classmethod
+    def from_str(cls, inp_str: str) -> Self:
+        return cls._member_map_[inp_str.strip().upper()]
 
 
 READ_FUNCS = {
