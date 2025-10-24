@@ -60,7 +60,7 @@ def add_process_cols(
 def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
     return lf.with_columns(
         [
-            pl.col(col_name).str.strip_chars().str.to_lowercase().alias(col_name)
+            pl.col(col_name).str.strip_chars().str.to_lowercase()
             for col_name, dtype in lf.collect_schema().items()
             if dtype == pl.Utf8
         ]
