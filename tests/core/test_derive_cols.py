@@ -2,14 +2,7 @@ import polars as pl
 import pytest
 
 import polars_pipe.core.derive_cols as dc
-
-BASIC_DF = pl.DataFrame(
-    [
-        {"a": 1, "b": 2},
-        {"a": 1, "b": 2},
-        {"a": 1, "b": 2},
-    ]
-)
+from tests.conftest import BASIC_DF
 
 
 @pytest.mark.parametrize(
