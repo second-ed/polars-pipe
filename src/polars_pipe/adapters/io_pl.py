@@ -75,14 +75,14 @@ class IOBase(ABC):
         total_rows = lf.select(pl.len()).collect().item()
         n_chunks = math.ceil(total_rows / rows_per_chunk)
 
-        logger.info(f"Number of partitions {n_chunks = }")
+        logger.debug(f"Number of partitions {n_chunks = }")
 
         for i in range(n_chunks):
             offset = i * rows_per_chunk
             length = min(rows_per_chunk, total_rows - offset)
             chunk_df = lf.slice(offset, length).collect()
             part_path = base_path / f"part-{i:05d}-{self.get_guid()}.{ext.lower()}"
-            logger.info(f"Writing partition {i = } to {part_path = }")
+            logger.debug(f"Writing partition {i = } to {part_path = }")
             write_func(chunk_df, part_path, **fwd_kwargs)
 
     @abstractmethod

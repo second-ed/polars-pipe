@@ -51,8 +51,8 @@ def add_process_cols(
 ) -> pl.LazyFrame:
     return lf.with_columns(
         [
-            pl.lit(guid).alias(f"{process_name}_guid"),
-            pl.lit(date_time).alias(f"{process_name}_datetime"),
+            pl.lit(guid).alias(f"sys_col_{process_name}_guid"),
+            pl.lit(date_time).alias(f"sys_col_{process_name}_datetime"),
         ]
     )
 

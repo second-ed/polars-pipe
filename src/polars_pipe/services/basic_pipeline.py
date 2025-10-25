@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
+import polars.selectors as cs
+
 import polars_pipe.adapters.io_pl as io
 import polars_pipe.core.config as cf
 import polars_pipe.core.inspect as ins
@@ -57,11 +59,15 @@ def run_pipeline(
         .pipe(tf.derive_new_cols, new_col_map=tf_config.new_col_map)
         .pipe(tf.nest_df_cols, nest_cols=tf_config.nest_cols)
         .pipe(tf.drop_df_cols, drop_cols=tf_config.drop_cols)
-    )
-
-    custom_transformation_fns = custom_transformation_fns or {}
-    transformed_lf = tf.pipe_custom_transformations(
-        transformed_lf, custom_transformation_fns, parsed_config.custom_transformations
+        .pipe(
+            tf.pipe_custom_transformations,
+            custom_transformation_fns=custom_transformation_fns or {},
+            custom_transformation_map=parsed_config.custom_transformations,
+        )
+        .select(
+            cs.by_name(*parsed_config.select_cols) - cs.starts_with("sys_col"),
+            cs.starts_with("sys_col"),
+        )
     )
 
     parsed_config.pipeline_plan = transformed_lf.explain().splitlines()

@@ -64,8 +64,8 @@ EXPECTED_TRANSFORMED_DF = pl.DataFrame(
             "project b": 0.5,
             "project c": None,
             "project d": None,
-            "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "ingest_guid": "abc-123",
+            "sys_col_ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "sys_col_ingest_guid": "abc-123",
             "custom_transformation_status": "applied",
         },
         {
@@ -75,8 +75,8 @@ EXPECTED_TRANSFORMED_DF = pl.DataFrame(
             "project b": None,
             "project c": 1.0,
             "project d": 0.0,
-            "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "ingest_guid": "abc-123",
+            "sys_col_ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "sys_col_ingest_guid": "abc-123",
             "custom_transformation_status": "applied",
         },
         {
@@ -86,8 +86,8 @@ EXPECTED_TRANSFORMED_DF = pl.DataFrame(
             "project b": 0.35,
             "project c": None,
             "project d": None,
-            "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "ingest_guid": "abc-123",
+            "sys_col_ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "sys_col_ingest_guid": "abc-123",
             "custom_transformation_status": "applied",
         },
         {
@@ -97,8 +97,8 @@ EXPECTED_TRANSFORMED_DF = pl.DataFrame(
             "project b": 0.05,
             "project c": None,
             "project d": None,
-            "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "ingest_guid": "abc-123",
+            "sys_col_ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "sys_col_ingest_guid": "abc-123",
             "custom_transformation_status": "applied",
         },
         {
@@ -108,8 +108,8 @@ EXPECTED_TRANSFORMED_DF = pl.DataFrame(
             "project b": None,
             "project c": 0.5,
             "project d": 0.5,
-            "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "ingest_guid": "abc-123",
+            "sys_col_ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "sys_col_ingest_guid": "abc-123",
             "custom_transformation_status": "applied",
         },
     ]
@@ -129,8 +129,8 @@ EXPECTED_ERROR_RECORDS = pl.DataFrame(
                 "project c": 0.45,
                 "project d": 0.55,
             },
-            "ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
-            "ingest_guid": "abc-123",
+            "sys_col_ingest_datetime": datetime.datetime(2025, 10, 16, 12, 0, tzinfo=datetime.UTC),
+            "sys_col_ingest_guid": "abc-123",
             "error_reason": "missing name",
         }
     ]
@@ -213,32 +213,49 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                     "custom_transformations": {
                         "mock_custom_transformation": {"status": "applied"},
                     },
+                    "select_cols": "*",
                     "pipeline_plan": [
-                        " WITH_COLUMNS:",
-                        ' ["applied".alias("custom_transformation_status")] ',
-                        '  simple π 8/8 ["name", "project a", ... 6 other columns]',
-                        "     WITH_COLUMNS:",
-                        '     [col("salary").as_struct([col("annual_bonus"), col("full_comp")]).alias("comp")] ',
+                        'simple π 9/9 ["name", "project a", ... 7 other columns]',
+                        "   WITH_COLUMNS:",
+                        '   ["applied".alias("custom_transformation_status")] ',
+                        '    simple π 8/8 ["name", "project a", ... 6 other columns]',
                         "       WITH_COLUMNS:",
-                        '       [[(col("salary")) + (col("annual_bonus"))].alias("full_comp")] ',
+                        '       [col("salary").as_struct([col("annual_bonus"), '
+                        'col("full_comp")]).alias("comp")] ',
                         "         WITH_COLUMNS:",
-                        '         [col("annual_bonus").clip([dyn int: 0, dyn int: 500000])] ',
-                        '          SELECT [col("name"), col("salary"), col("bonus").alias("annual_bonus"), col("project a"), col("project b"), col("project c"), col("project d"), col("ingest_guid"), col("ingest_datetime")]',
-                        "             WITH_COLUMNS:",
-                        '             [col("bonus").strict_cast(Int64)] ',
+                        '         [[(col("salary")) + (col("annual_bonus"))].alias("full_comp")] ',
+                        "           WITH_COLUMNS:",
+                        '           [col("annual_bonus").clip([dyn int: 0, dyn int: 500000])] ',
+                        '            SELECT [col("name"), col("salary"), '
+                        'col("bonus").alias("annual_bonus"), col("project a"), col("project '
+                        'b"), col("project c"), col("project d"), col("sys_col_ingest_guid"), '
+                        'col("sys_col_ingest_datetime")]',
                         "               WITH_COLUMNS:",
-                        '               [col("project a"), col("project b"), col("project c"), col("project d"), col("bonus").fill_null([0.0])] ',
-                        "                UNNEST by:[projects]",
-                        '                  FILTER [(col("division")) != ("D")]',
-                        "                  FROM",
-                        "                     WITH_COLUMNS:",
-                        '                     [col("name").str.strip_chars([null]).str.lowercase(), col("division").str.strip_chars([null]).str.lowercase(), col("ingest_guid").str.strip_chars([null]).str.lowercase()] ',
-                        '                      simple π 7/7 ["name", "salary", "division", ... 4 other columns]',
-                        '                        FILTER [(col("error_reason")) == ("")]',
-                        "                        FROM",
-                        "                           WITH_COLUMNS:",
-                        '                           ["abc-123".alias("ingest_guid"), 2025-10-16 12:00:00.dt.replace_time_zone(["earliest"]).alias("ingest_datetime"), when(col("name").is_null()).then("missing name").otherwise("").str.concat_horizontal().str.strip_chars([","]).alias("error_reason")] ',
-                        '                            DF ["name", "salary", "division", "bonus", ...]; PROJECT["name", "salary", "division", "bonus", ...] 5/5 COLUMNS',
+                        '               [col("bonus").strict_cast(Int64)] ',
+                        "                 WITH_COLUMNS:",
+                        '                 [col("project a"), col("project b"), col("project '
+                        'c"), col("project d"), col("bonus").fill_null([0.0])] ',
+                        "                  UNNEST by:[projects]",
+                        '                    FILTER [(col("division")) != ("D")]',
+                        "                    FROM",
+                        "                       WITH_COLUMNS:",
+                        "                       "
+                        '[col("name").str.strip_chars([null]).str.lowercase(), '
+                        'col("division").str.strip_chars([null]).str.lowercase(), '
+                        'col("sys_col_ingest_guid").str.strip_chars([null]).str.lowercase()] ',
+                        '                        simple π 7/7 ["name", "salary", "division", '
+                        "... 4 other columns]",
+                        '                          FILTER [(col("error_reason")) == ("")]',
+                        "                          FROM",
+                        "                             WITH_COLUMNS:",
+                        '                             ["abc-123".alias("sys_col_ingest_guid"), '
+                        "2025-10-16 "
+                        '12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), '
+                        'when(col("name").is_null()).then("missing '
+                        'name").otherwise("").str.concat_horizontal().str.strip_chars([","]).alias("error_reason")] ',
+                        '                              DF ["name", "salary", "division", '
+                        '"bonus", ...]; PROJECT["name", "salary", "division", "bonus", ...] '
+                        "5/5 COLUMNS",
                     ],
                 },
             },
@@ -272,10 +289,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 "project c": None,
                                 "project d": None,
                             },
-                            "ingest_datetime": datetime.datetime(
+                            "sys_col_ingest_datetime": datetime.datetime(
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
-                            "ingest_guid": "abc-123",
+                            "sys_col_ingest_guid": "abc-123",
                         },
                         {
                             "name": "ben",
@@ -288,10 +305,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 "project c": 1.0,
                                 "project d": 0.0,
                             },
-                            "ingest_datetime": datetime.datetime(
+                            "sys_col_ingest_datetime": datetime.datetime(
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
-                            "ingest_guid": "abc-123",
+                            "sys_col_ingest_guid": "abc-123",
                         },
                         {
                             "name": "charlie",
@@ -304,10 +321,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 "project c": None,
                                 "project d": None,
                             },
-                            "ingest_datetime": datetime.datetime(
+                            "sys_col_ingest_datetime": datetime.datetime(
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
-                            "ingest_guid": "abc-123",
+                            "sys_col_ingest_guid": "abc-123",
                         },
                         {
                             "name": None,
@@ -320,10 +337,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 "project c": 0.45,
                                 "project d": 0.55,
                             },
-                            "ingest_datetime": datetime.datetime(
+                            "sys_col_ingest_datetime": datetime.datetime(
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
-                            "ingest_guid": "abc-123",
+                            "sys_col_ingest_guid": "abc-123",
                         },
                         {
                             "name": "dani",
@@ -336,10 +353,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 "project c": None,
                                 "project d": None,
                             },
-                            "ingest_datetime": datetime.datetime(
+                            "sys_col_ingest_datetime": datetime.datetime(
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
-                            "ingest_guid": "abc-123",
+                            "sys_col_ingest_guid": "abc-123",
                         },
                         {
                             "name": "emily",
@@ -352,10 +369,10 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 "project c": 0.5,
                                 "project d": 0.5,
                             },
-                            "ingest_datetime": datetime.datetime(
+                            "sys_col_ingest_datetime": datetime.datetime(
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
-                            "ingest_guid": "abc-123",
+                            "sys_col_ingest_guid": "abc-123",
                         },
                     ]
                 ),
@@ -374,16 +391,119 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                     "validation": {},
                     "transformations": {},
                     "custom_transformations": {},
+                    "select_cols": "*",
                     "pipeline_plan": [
                         " WITH_COLUMNS:",
-                        ' [col("ingest_guid").str.strip_chars([null]).str.lowercase()] ',
+                        ' [col("sys_col_ingest_guid").str.strip_chars([null]).str.lowercase()] ',
                         "   WITH_COLUMNS:",
-                        '   ["abc-123".alias("ingest_guid"), 2025-10-16 12:00:00.dt.replace_time_zone(["earliest"]).alias("ingest_datetime"), col("name").str.strip_chars([null]).str.lowercase(), col("division").str.strip_chars([null]).str.lowercase()] ',
-                        '    DF ["name", "salary", "division", "bonus", ...]; PROJECT */5 COLUMNS',
+                        '   ["abc-123".alias("sys_col_ingest_guid"), 2025-10-16 '
+                        '12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), '
+                        'col("name").str.strip_chars([null]).str.lowercase(), '
+                        'col("division").str.strip_chars([null]).str.lowercase()] ',
+                        '    DF ["name", "salary", "division", "bonus", ...]; PROJECT["name", '
+                        '"salary", "division", "bonus", ...] 5/5 COLUMNS',
                     ],
                 },
             },
             id="should skip all stages if not given config",
+        ),
+        pytest.param(
+            {abs_path("./path/to/raw_data.parquet"): BASIC_INPUT_DF},
+            {
+                "process_name": "ingest",
+                "src_path": "./path/to/raw_data.parquet",
+                "src_file_type": "parquet",
+                "dst_root": "./dst/root",
+                "dst_file_type": "parquet",
+                "validation": {},
+                "transformations": {},
+                "select_cols": ["name", "salary"],
+            },
+            None,
+            {
+                abs_path(
+                    "./dst/root/abc-123/transformed_data/part-00000-abc-123.parquet"
+                ): pl.DataFrame(
+                    [
+                        {
+                            "name": "alice",
+                            "salary": 30000,
+                            "sys_col_ingest_datetime": datetime.datetime(
+                                2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                            ),
+                            "sys_col_ingest_guid": "abc-123",
+                        },
+                        {
+                            "name": "ben",
+                            "salary": 28000,
+                            "sys_col_ingest_datetime": datetime.datetime(
+                                2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                            ),
+                            "sys_col_ingest_guid": "abc-123",
+                        },
+                        {
+                            "name": "charlie",
+                            "salary": 75000,
+                            "sys_col_ingest_datetime": datetime.datetime(
+                                2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                            ),
+                            "sys_col_ingest_guid": "abc-123",
+                        },
+                        {
+                            "name": None,
+                            "salary": 0,
+                            "sys_col_ingest_datetime": datetime.datetime(
+                                2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                            ),
+                            "sys_col_ingest_guid": "abc-123",
+                        },
+                        {
+                            "name": "dani",
+                            "salary": 50000,
+                            "sys_col_ingest_datetime": datetime.datetime(
+                                2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                            ),
+                            "sys_col_ingest_guid": "abc-123",
+                        },
+                        {
+                            "name": "emily",
+                            "salary": 80000,
+                            "sys_col_ingest_datetime": datetime.datetime(
+                                2025, 10, 16, 12, 0, tzinfo=datetime.UTC
+                            ),
+                            "sys_col_ingest_guid": "abc-123",
+                        },
+                    ]
+                ),
+                abs_path("./dst/root/abc-123/config/ingest_20251016_1200.yaml"): {
+                    "guid": "abc-123",
+                    "date_time": "20251016_1200",
+                    "process_name": "ingest",
+                    "src_path": abs_path("./path/to/raw_data.parquet"),
+                    "src_file_type": "PARQUET",
+                    "dst_root": abs_path("./dst/root"),
+                    "dst_file_type": "PARQUET",
+                    "valid_dst_stem": "transformed_data",
+                    "invalid_dst_stem": "error_records",
+                    "config_dst_stem": "config",
+                    "desc_stats_stem": "desc_stats",
+                    "validation": {},
+                    "transformations": {},
+                    "custom_transformations": {},
+                    "select_cols": ["name", "salary"],
+                    "pipeline_plan": [
+                        " WITH_COLUMNS:",
+                        ' [col("sys_col_ingest_guid").str.strip_chars([null]).str.lowercase()] ',
+                        "   WITH_COLUMNS:",
+                        '   ["abc-123".alias("sys_col_ingest_guid"), 2025-10-16 '
+                        '12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), '
+                        'col("name").str.strip_chars([null]).str.lowercase()] ',
+                        '    DF ["name", "salary", "division", "bonus", ...]; PROJECT["name", '
+                        '"salary"] 2/5 COLUMNS',
+                    ],
+                },
+            },
+            id="should filter all other columns except system cols",
         ),
     ],
 )

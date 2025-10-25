@@ -57,6 +57,10 @@ class GeneralConfig:
         default="desc_stats",
         validator=attrs.validators.instance_of(str),
     )
+    select_cols: list | str = attrs.field(
+        default="*",
+        validator=attrs.validators.instance_of((list, str)),
+    )
 
     @classmethod
     def from_dict(cls, config: dict) -> Self:
