@@ -21,57 +21,62 @@ BASIC_INSPECT_DF = pl.DataFrame(
             [
                 {
                     "statistic": "count",
-                    "a": 3.0,
-                    "b": 2.0,
+                    "a": "3.0",
+                    "b": "2.0",
                 },
                 {
                     "statistic": "null_count",
-                    "a": 1.0,
-                    "b": 2.0,
+                    "a": "1.0",
+                    "b": "2.0",
                 },
                 {
                     "statistic": "mean",
-                    "a": 1.0,
-                    "b": 4.5,
+                    "a": "1.0",
+                    "b": "4.5",
                 },
                 {
                     "statistic": "std",
-                    "a": 1.0,
-                    "b": 2.1213203435596424,
+                    "a": "1.0",
+                    "b": "2.1213203435596424",
                 },
                 {
                     "statistic": "min",
-                    "a": 0.0,
-                    "b": 3.0,
+                    "a": "0.0",
+                    "b": "3.0",
                 },
                 {
                     "statistic": "25%",
-                    "a": 1.0,
-                    "b": 3.0,
+                    "a": "1.0",
+                    "b": "3.0",
                 },
                 {
                     "statistic": "50%",
-                    "a": 1.0,
-                    "b": 6.0,
+                    "a": "1.0",
+                    "b": "6.0",
                 },
                 {
                     "statistic": "75%",
-                    "a": 2.0,
-                    "b": 6.0,
+                    "a": "2.0",
+                    "b": "6.0",
                 },
                 {
                     "statistic": "max",
-                    "a": 2.0,
-                    "b": 6.0,
+                    "a": "2.0",
+                    "b": "6.0",
                 },
                 {
                     "statistic": "null_proportion",
-                    "a": 0.25,
-                    "b": 0.5,
+                    "a": "0.25",
+                    "b": "0.5",
+                },
+                {
+                    "statistic": "n_unique",
+                    "a": "4",
+                    "b": "3",
                 },
             ],
         )
     ],
 )
 def test_describe_lf(inp_lf, expected_result):
-    assert describe_lf(inp_lf).to_dicts() == expected_result
+    assert describe_lf(inp_lf).collect().to_dicts() == expected_result

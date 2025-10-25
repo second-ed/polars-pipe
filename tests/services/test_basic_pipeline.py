@@ -153,6 +153,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                 "dst_file_type": "parquet",
                 "valid_dst_path": "./path/to/transformed_data",
                 "invalid_dst_path": "./path/to/error_records",
+                "desc_stats_dir": "./path/to/desc_stats",
                 "config_dst_dir": "./path/to",
                 "validation": {"missing name": ["name", "is_not_null", None]},
                 "transformations": {
@@ -193,6 +194,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                     "valid_dst_path": abs_path("./path/to/transformed_data"),
                     "invalid_dst_path": abs_path("./path/to/error_records"),
                     "config_dst_dir": abs_path("./path/to"),
+                    "desc_stats_dir": abs_path("./path/to/desc_stats"),
                     "validation": {"missing name": ["name", "is_not_null", None]},
                     "transformations": {
                         "filter_exprs": {"no d division": ["division", "ne", "D"]},
@@ -254,6 +256,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                 "valid_dst_path": "./path/to/transformed_data",
                 "invalid_dst_path": "./path/to/error_records",
                 "config_dst_dir": "./path/to",
+                "desc_stats_dir": "./path/to/desc_stats",
                 "validation": {},
                 "transformations": {},
             },
@@ -369,6 +372,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                     "valid_dst_path": abs_path("./path/to/transformed_data"),
                     "invalid_dst_path": abs_path("./path/to/error_records"),
                     "config_dst_dir": abs_path("./path/to"),
+                    "desc_stats_dir": abs_path("./path/to/desc_stats"),
                     "validation": {},
                     "transformations": {},
                     "custom_transformations": {},

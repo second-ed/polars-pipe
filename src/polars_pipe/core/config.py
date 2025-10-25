@@ -43,6 +43,9 @@ class GeneralConfig:
     config_dst_dir: str = attrs.field(
         validator=attrs.validators.instance_of(str), converter=abs_path
     )
+    desc_stats_dir: str = attrs.field(
+        validator=attrs.validators.instance_of(str), converter=abs_path
+    )
     validation: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     transformations: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     custom_transformations: dict = attrs.field(

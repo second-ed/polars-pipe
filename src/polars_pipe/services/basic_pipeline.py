@@ -5,6 +5,7 @@ from pathlib import Path
 
 import polars_pipe.adapters.io_pl as io
 import polars_pipe.core.config as cf
+import polars_pipe.core.inspect as ins
 import polars_pipe.core.transform as tf
 import polars_pipe.core.validation as vl
 
@@ -34,6 +35,13 @@ def run_pipeline(
         )
         .pipe(vl.validate_df, rules=vl.parse_validation_config(parsed_config.validation))
     )
+
+    io_wrapper.write(
+        ins.describe_lf(valid_lf),
+        Path(parsed_config.desc_stats_dir) / "pre_transform",
+        file_type=io.FileType.PARQUET,
+    )
+
     tf_config = tf.TransformConfig.from_dict(parsed_config.transformations)
 
     transformed_lf = (
@@ -65,6 +73,12 @@ def run_pipeline(
 
     dst_file_type = io.FileType.from_str(parsed_config.dst_file_type)
     io_wrapper.write(transformed_lf, parsed_config.valid_dst_path, file_type=dst_file_type)
+
+    io_wrapper.write(
+        ins.describe_lf(transformed_lf),
+        Path(parsed_config.desc_stats_dir) / "post_transform",
+        file_type=io.FileType.PARQUET,
+    )
 
     if invalid_lf.limit(1).collect().height > 0:
         io_wrapper.write(invalid_lf, parsed_config.invalid_dst_path, file_type=dst_file_type)
