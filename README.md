@@ -16,6 +16,7 @@
 │       │   ├── __init__.py
 │       │   ├── config.py
 │       │   ├── derive_cols.py
+│       │   ├── inspect.py
 │       │   ├── logger.py
 │       │   ├── transform.py
 │       │   └── validation.py
@@ -31,6 +32,7 @@
 │   ├── core
 │   │   ├── __init__.py
 │   │   ├── test_derive_cols.py
+│   │   ├── test_inspect.py
 │   │   └── test_validation.py
 │   ├── services
 │   │   ├── __init__.py
