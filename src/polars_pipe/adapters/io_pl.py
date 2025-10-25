@@ -20,7 +20,7 @@ class IOBase(ABC):
     guid: str | None = attrs.field(default=None, validator=optional(instance_of(str)))
 
     def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.LazyFrame:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
+        logger.info(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._read_funcs:
@@ -32,7 +32,7 @@ class IOBase(ABC):
     def write(
         self, data: pl.LazyFrame | dict, path: str, file_type: FileType | str, **kwargs: dict
     ) -> None:
-        logger.debug(f"{path = } {file_type = } {kwargs = }")
+        logger.info(f"{path = } {file_type = } {kwargs = }")
         file_type = self._get_file_type(file_type)
 
         if file_type not in self._write_funcs:
@@ -75,11 +75,14 @@ class IOBase(ABC):
         total_rows = lf.select(pl.len()).collect().item()
         n_chunks = math.ceil(total_rows / rows_per_chunk)
 
+        logger.info(f"Number of partitions {n_chunks = }")
+
         for i in range(n_chunks):
             offset = i * rows_per_chunk
             length = min(rows_per_chunk, total_rows - offset)
             chunk_df = lf.slice(offset, length).collect()
             part_path = base_path / f"part-{i:05d}-{self.get_guid()}.{ext.lower()}"
+            logger.info(f"Writing partition {i = } to {part_path = }")
             write_func(chunk_df, part_path, **fwd_kwargs)
 
     @abstractmethod
