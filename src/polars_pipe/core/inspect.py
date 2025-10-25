@@ -1,6 +1,10 @@
 import polars as pl
 
 
+def describe_lf(lf: pl.LazyFrame) -> pl.DataFrame:
+    return lf.describe().vstack(get_null_proportions(lf).collect())
+
+
 def get_null_proportions(lf: pl.LazyFrame) -> pl.LazyFrame:
     """Get the null count divided by the length of the dataframe.
 
@@ -11,6 +15,10 @@ def get_null_proportions(lf: pl.LazyFrame) -> pl.LazyFrame:
         pl.LazyFrame: The first row of the resulting lazyframe to avoid the same
         values repeated on every row.
     """
-    return lf.with_columns(
-        (pl.col(name).null_count() / pl.len()).alias(name) for name in lf.collect_schema().names()
-    ).first()
+    schema_names = lf.collect_schema().names()
+    return (
+        lf.with_columns(pl.lit("null_proportion").alias("statistic"))
+        .with_columns([(pl.col(name).null_count()).alias(name) / pl.len() for name in schema_names])
+        .select("statistic", *schema_names)
+        .first()
+    )
