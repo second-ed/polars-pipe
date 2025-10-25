@@ -27,6 +27,7 @@ class GeneralConfig:
         ],
         converter=str.upper,
     )
+    dst_root: str = attrs.field(validator=attrs.validators.instance_of(str), converter=abs_path)
     dst_file_type: str = attrs.field(
         validator=[
             attrs.validators.instance_of(str),
@@ -34,24 +35,28 @@ class GeneralConfig:
         ],
         converter=str.upper,
     )
-    valid_dst_path: str = attrs.field(
-        validator=attrs.validators.instance_of(str), converter=abs_path
-    )
-    invalid_dst_path: str = attrs.field(
-        validator=attrs.validators.instance_of(str), converter=abs_path
-    )
-    config_dst_dir: str = attrs.field(
-        validator=attrs.validators.instance_of(str), converter=abs_path
-    )
-    desc_stats_dir: str = attrs.field(
-        validator=attrs.validators.instance_of(str), converter=abs_path
-    )
     validation: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     transformations: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     custom_transformations: dict = attrs.field(
         factory=dict, validator=attrs.validators.instance_of(dict)
     )
     pipeline_plan: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
+    valid_dst_stem: str = attrs.field(
+        default="transformed_data",
+        validator=attrs.validators.instance_of(str),
+    )
+    invalid_dst_stem: str = attrs.field(
+        default="error_records",
+        validator=attrs.validators.instance_of(str),
+    )
+    config_dst_stem: str = attrs.field(
+        default="config",
+        validator=attrs.validators.instance_of(str),
+    )
+    desc_stats_stem: str = attrs.field(
+        default="desc_stats",
+        validator=attrs.validators.instance_of(str),
+    )
 
     @classmethod
     def from_dict(cls, config: dict) -> Self:

@@ -151,10 +151,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                 "src_path": "./path/to/raw_data.parquet",
                 "src_file_type": "parquet",
                 "dst_file_type": "parquet",
-                "valid_dst_path": "./path/to/transformed_data",
-                "invalid_dst_path": "./path/to/error_records",
-                "desc_stats_dir": "./path/to/desc_stats",
-                "config_dst_dir": "./path/to",
+                "dst_root": "./dst/root",
                 "validation": {"missing name": ["name", "is_not_null", None]},
                 "transformations": {
                     "filter_exprs": {"no d division": ["division", "ne", "D"]},
@@ -179,22 +176,23 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
             {"mock_custom_transformation": mock_custom_transformation},
             {
                 abs_path(
-                    "path/to/transformed_data/part-00000-abc-123.parquet"
+                    "./dst/root/abc-123/transformed_data/part-00000-abc-123.parquet"
                 ): EXPECTED_TRANSFORMED_DF,
                 abs_path(
-                    "path/to/error_records/part-00000-abc-123.parquet"
+                    "./dst/root/abc-123/error_records/part-00000-abc-123.parquet"
                 ): EXPECTED_ERROR_RECORDS,
-                abs_path("./path/to/ingest_20251016_1200.yaml"): {
+                abs_path("./dst/root/abc-123/config/ingest_20251016_1200.yaml"): {
                     "guid": "abc-123",
                     "date_time": "20251016_1200",
                     "process_name": "ingest",
                     "src_path": abs_path("./path/to/raw_data.parquet"),
                     "src_file_type": "PARQUET",
+                    "dst_root": abs_path("./dst/root"),
                     "dst_file_type": "PARQUET",
-                    "valid_dst_path": abs_path("./path/to/transformed_data"),
-                    "invalid_dst_path": abs_path("./path/to/error_records"),
-                    "config_dst_dir": abs_path("./path/to"),
-                    "desc_stats_dir": abs_path("./path/to/desc_stats"),
+                    "valid_dst_stem": "transformed_data",
+                    "invalid_dst_stem": "error_records",
+                    "config_dst_stem": "config",
+                    "desc_stats_stem": "desc_stats",
                     "validation": {"missing name": ["name", "is_not_null", None]},
                     "transformations": {
                         "filter_exprs": {"no d division": ["division", "ne", "D"]},
@@ -252,17 +250,16 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                 "process_name": "ingest",
                 "src_path": "./path/to/raw_data.parquet",
                 "src_file_type": "parquet",
+                "dst_root": "./dst/root",
                 "dst_file_type": "parquet",
-                "valid_dst_path": "./path/to/transformed_data",
-                "invalid_dst_path": "./path/to/error_records",
-                "config_dst_dir": "./path/to",
-                "desc_stats_dir": "./path/to/desc_stats",
                 "validation": {},
                 "transformations": {},
             },
             None,
             {
-                abs_path("./path/to/transformed_data/part-00000-abc-123.parquet"): pl.DataFrame(
+                abs_path(
+                    "./dst/root/abc-123/transformed_data/part-00000-abc-123.parquet"
+                ): pl.DataFrame(
                     [
                         {
                             "name": "alice",
@@ -362,17 +359,18 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                         },
                     ]
                 ),
-                abs_path("./path/to/ingest_20251016_1200.yaml"): {
+                abs_path("./dst/root/abc-123/config/ingest_20251016_1200.yaml"): {
                     "guid": "abc-123",
                     "date_time": "20251016_1200",
                     "process_name": "ingest",
                     "src_path": abs_path("./path/to/raw_data.parquet"),
                     "src_file_type": "PARQUET",
+                    "dst_root": abs_path("./dst/root"),
                     "dst_file_type": "PARQUET",
-                    "valid_dst_path": abs_path("./path/to/transformed_data"),
-                    "invalid_dst_path": abs_path("./path/to/error_records"),
-                    "config_dst_dir": abs_path("./path/to"),
-                    "desc_stats_dir": abs_path("./path/to/desc_stats"),
+                    "valid_dst_stem": "transformed_data",
+                    "invalid_dst_stem": "error_records",
+                    "config_dst_stem": "config",
+                    "desc_stats_stem": "desc_stats",
                     "validation": {},
                     "transformations": {},
                     "custom_transformations": {},

@@ -38,7 +38,9 @@ def run_pipeline(
 
     io_wrapper.write(
         ins.describe_lf(valid_lf),
-        Path(parsed_config.desc_stats_dir) / "pre_transform",
+        Path(parsed_config.dst_root).joinpath(
+            io_wrapper.get_guid(), parsed_config.desc_stats_stem, "pre_transform"
+        ),
         file_type=io.FileType.PARQUET,
     )
 
@@ -66,19 +68,34 @@ def run_pipeline(
 
     io_wrapper.write(
         parsed_config.to_dict(),
-        Path(parsed_config.config_dst_dir)
-        / f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
+        Path(parsed_config.dst_root).joinpath(
+            io_wrapper.get_guid(),
+            parsed_config.config_dst_stem,
+            f"{parsed_config.process_name}_{parsed_config.date_time}.yaml",
+        ),
         file_type=io.FileType.YAML,
     )
 
     dst_file_type = io.FileType.from_str(parsed_config.dst_file_type)
-    io_wrapper.write(transformed_lf, parsed_config.valid_dst_path, file_type=dst_file_type)
+    io_wrapper.write(
+        transformed_lf,
+        Path(parsed_config.dst_root).joinpath(io_wrapper.get_guid(), parsed_config.valid_dst_stem),
+        file_type=dst_file_type,
+    )
 
     io_wrapper.write(
         ins.describe_lf(transformed_lf),
-        Path(parsed_config.desc_stats_dir) / "post_transform",
+        Path(parsed_config.dst_root).joinpath(
+            io_wrapper.get_guid(), parsed_config.desc_stats_stem, "post_transform"
+        ),
         file_type=io.FileType.PARQUET,
     )
 
     if invalid_lf.limit(1).collect().height > 0:
-        io_wrapper.write(invalid_lf, parsed_config.invalid_dst_path, file_type=dst_file_type)
+        io_wrapper.write(
+            invalid_lf,
+            Path(parsed_config.dst_root).joinpath(
+                io_wrapper.get_guid(), parsed_config.invalid_dst_stem
+            ),
+            file_type=dst_file_type,
+        )
