@@ -20,6 +20,7 @@ from polars_pipe.core.logger import logger
 POLARS_DTYPE_MAPPING = MappingProxyType(
     {k: v for k, v in inspect.getmembers(pl_dtypes) if is_polars_dtype(v)}
 )
+logger.info(f"{POLARS_DTYPE_MAPPING = }")
 
 
 @attrs.define(frozen=True)
@@ -50,6 +51,7 @@ def add_hash_col(lf: pl.LazyFrame) -> pl.LazyFrame:
     lf_schema = dict(lf.collect_schema().items())
     if "sys_col_row_hash" in lf_schema:
         return lf
+
     non_sys_cols = [c for c in lf_schema if not c.startswith("sys_col")]
 
     return lf.with_columns(
