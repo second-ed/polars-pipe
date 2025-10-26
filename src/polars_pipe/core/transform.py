@@ -46,6 +46,27 @@ class TransformConfig:
         return cls(**config)
 
 
+def add_hash_col(lf: pl.LazyFrame) -> pl.LazyFrame:
+    lf_schema = dict(lf.collect_schema().items())
+    if "sys_col_row_hash" in lf_schema:
+        return lf
+    non_sys_cols = [c for c in lf_schema if not c.startswith("sys_col")]
+
+    return lf.with_columns(
+        pl.concat_str(
+            [
+                pl.col(c).struct.json_encode()
+                if isinstance(lf_schema[c], (pl.Struct, pl.List))
+                else pl.col(c).cast(pl.Utf8)
+                for c in non_sys_cols
+            ],
+            separator="|",
+        )
+        .hash()
+        .alias("sys_col_row_hash")
+    )
+
+
 def add_process_cols(
     lf: pl.LazyFrame, guid: str, date_time: datetime, process_name: str = "process"
 ) -> pl.LazyFrame:

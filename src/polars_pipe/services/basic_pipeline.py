@@ -29,6 +29,7 @@ def run_pipeline(
 
     valid_lf, invalid_lf = (
         lf.pipe(vl.check_expected_cols, expected_cols=vl.extract_expected_cols(parsed_config))
+        .pipe(tf.add_hash_col)
         .pipe(
             tf.add_process_cols,
             guid=parsed_config.guid,
