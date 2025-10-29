@@ -48,6 +48,10 @@ class TransformConfig:
 
 
 def add_hash_col(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Generate deterministic hashes of the values for each row in the lf.
+    If the column `sys_col_row_hash` is already present in the lf, it returns the lf unchanged.
+    This stage cannot be skipped.
+    """
     lf_schema = dict(lf.collect_schema().items())
     if "sys_col_row_hash" in lf_schema:
         return lf
@@ -72,6 +76,12 @@ def add_hash_col(lf: pl.LazyFrame) -> pl.LazyFrame:
 def add_process_cols(
     lf: pl.LazyFrame, guid: str, date_time: datetime, process_name: str = "process"
 ) -> pl.LazyFrame:
+    """Add columns for the given guid and process time.
+    The columns are called f"sys_col_{process_name}_guid" and f"sys_col_{process_name}_datetime"
+    to allow for multiple teams to use the same pipeline and not overwrite eachothers sys_cols,
+    maintaining the lineage of the data as its passed between teams.
+    This stage cannot be skipped.
+    """
     return lf.with_columns(
         [
             pl.lit(guid).alias(f"sys_col_{process_name}_guid"),
@@ -81,6 +91,9 @@ def add_process_cols(
 
 
 def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Normalise the string columns by stripping whitespace and converting to lowercase.
+    This stage cannot be skipped.
+    """
     return lf.with_columns(
         [
             pl.col(col_name).str.strip_chars().str.to_lowercase()
@@ -91,6 +104,10 @@ def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def drop_df_cols(lf: pl.LazyFrame, drop_cols: list[str]) -> pl.LazyFrame:
+    """Drop the given columns from the lf.
+    If no drop_cols are provided, exits early returning the given lf.
+    Expects a list of `["col_to_drop_a", "col_to_drop_b"]`
+    """
     if not drop_cols:
         logger.info(f"No drop_cols provided: {drop_cols = }")
         return lf
@@ -99,6 +116,10 @@ def drop_df_cols(lf: pl.LazyFrame, drop_cols: list[str]) -> pl.LazyFrame:
 
 
 def rename_df_cols(lf: pl.LazyFrame, rename_map: dict[str, str]) -> pl.LazyFrame:
+    """Rename columns to new names.
+    If no rename_map is provided, exits early returning the given lf.
+    Expects a dict of `{"old_col_name": "new_col_name"}`.
+    """
     if not rename_map:
         logger.info(f"No rename_map provided: {rename_map = }")
         return lf
@@ -107,6 +128,10 @@ def rename_df_cols(lf: pl.LazyFrame, rename_map: dict[str, str]) -> pl.LazyFrame
 
 
 def recast_df_cols(lf: pl.LazyFrame, recast_map: dict[str, pl.DataType]) -> pl.LazyFrame:
+    """Recast columns to new datatypes.
+    If no recast_map is provided, exits early returning the given lf.
+    Expects a dict of `{"col_name": pl.DataType}`.
+    """
     if not recast_map:
         logger.info(f"No recast_map provided: {recast_map = }")
         return lf
@@ -115,6 +140,10 @@ def recast_df_cols(lf: pl.LazyFrame, recast_map: dict[str, pl.DataType]) -> pl.L
 
 
 def fill_nulls_per_col(lf: pl.LazyFrame, fill_map: dict[str, Any]) -> pl.LazyFrame:
+    """Fill nulls for given columns with value.
+    If no fill_map is provided, exits early returning the given lf.
+    Expects a dict of `{"col_name": "fill value"}`.
+    """
     if not fill_map:
         logger.info(f"No fill_map provided: {fill_map = }")
         return lf
@@ -123,6 +152,10 @@ def fill_nulls_per_col(lf: pl.LazyFrame, fill_map: dict[str, Any]) -> pl.LazyFra
 
 
 def clip_df_cols(lf: pl.LazyFrame, clip_map: dict[str, tuple[float, float]]) -> pl.LazyFrame:
+    """Clip values for given columns with min/max.
+    If no clip_map is provided, exits early returning the given lf.
+    Expects a dict of `{"col_name": (min_val, max_val)}`.
+    """
     if not clip_map:
         logger.info(f"No clip_map provided: {clip_map = }")
         return lf
@@ -133,6 +166,10 @@ def clip_df_cols(lf: pl.LazyFrame, clip_map: dict[str, tuple[float, float]]) -> 
 
 
 def nest_df_cols(lf: pl.LazyFrame, nest_cols: dict[str, list[str]]) -> pl.LazyFrame:
+    """Nest given columns into a struct column.
+    If no nest_cols is provided, exits early returning the given lf.
+    Expects a dict of `{"struct_col_name": ["col_a", "col_b", "col_c"]}`.
+    """
     if not nest_cols:
         logger.info(f"No nest_cols provided: {nest_cols = }")
         return lf
@@ -143,6 +180,10 @@ def nest_df_cols(lf: pl.LazyFrame, nest_cols: dict[str, list[str]]) -> pl.LazyFr
 
 
 def unnest_df_cols(lf: pl.LazyFrame, unnest_cols: list[str]) -> pl.LazyFrame:
+    """Unnest given columns from struct columns.
+    If no unnest_cols is provided, exits early returning the given lf.
+    Expects a list of `["struct_col_a", "struct_col_b", "struct_col_c"]`.
+    """
     if not unnest_cols:
         logger.info(f"No unnest_cols provided: {unnest_cols = }")
         return lf
@@ -151,6 +192,10 @@ def unnest_df_cols(lf: pl.LazyFrame, unnest_cols: list[str]) -> pl.LazyFrame:
 
 
 def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
+    """Filter the lf where all the given expressions are true.
+    If no filter_exprs is provided, exits early returning the given lf.
+    Expects a list of polars expressions: `list[pl.Expr]`.
+    """
     if not filter_exprs:
         logger.info(f"No filter_exprs provided: {filter_exprs = }")
         return lf
@@ -166,6 +211,23 @@ logger.info(f"{DERIVE_FNS = }")
 
 
 def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) -> pl.LazyFrame:
+    """Derive new columns from existing columns.
+    If no new_col_map is provided, exits early returning the given lf.
+    Expects a dict:
+    ```
+    {
+        "new_col_name": {
+            "fn_name": "add_cols",
+            "fn_kwargs": {"cols": ["col_a", "col_b"],
+        },
+        "other_new_name": {
+            "fn_name": "mul_cols",
+            "fn_kwargs": {"cols": ["col_a", "col_b", "col_c"],
+        }
+    }
+    ```
+    Currently the valid derived functions are pulled from the derive_cols.py file.
+    """
     if not new_col_map:
         logger.info(f"No new_col_map provided: {new_col_map = }")
         return lf
@@ -183,8 +245,21 @@ def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) ->
 def pipe_custom_transformations(
     lf: pl.LazyFrame,
     custom_transformation_fns: dict[str, Callable[[pl.LazyFrame, Any], pl.LazyFrame]],
-    custom_transformation_map: dict[str, dict[str, dict[str, Any]]],
+    custom_transformation_map: dict[str, dict[str, Any]],
 ) -> pl.LazyFrame:
+    """Apply custom transformations to the lf.
+    If no custom_transformation_map is provided, exits early returning the given lf.
+    Must be given a dict of functions that meet this protocol: `dict[str, Callable[[pl.LazyFrame, Any], pl.LazyFrame]]`.
+    `custom_transformation_map` is expected as
+    ```
+    {
+        "custom_transformation_name": {"kwarg": "kwarg_value"},
+        "other_custom_transformation_name": {"other_kwarg": "other_kwarg_value", "another_kwarg": 0},
+    }
+    ```
+    If a custom function is listed in the `custom_transformation_map` that isn't in the `custom_transformation_fns`
+    will raise a KeyError.
+    """
     if not custom_transformation_map:
         logger.info(f"No custom_transformation_map provided: {custom_transformation_map = }")
         return lf

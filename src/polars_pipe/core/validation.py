@@ -10,6 +10,10 @@ from polars_pipe.core.logger import logger
 
 
 def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
+    """Extract the columns that are referenced by name in the config.
+    Returns a set of the expected_cols, accounts for columns that may be renamed.
+    """
+
     def collect_original_names_dict_keys_or_list(
         stage_params: dict | list, reverse_rename_map: dict[str, str], new_cols: list[str]
     ) -> set[str]:
@@ -69,6 +73,9 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
 
 
 def check_expected_cols(lf: pl.LazyFrame, expected_cols: Iterable[str]) -> pl.LazyFrame:
+    """Check whether the expected columns are in the lf schema.
+    Raises a ValueError if any are missing.
+    """
     logger.info(f"{expected_cols = }")
     actual_schema = lf.collect_schema().names()
     missing = [c for c in expected_cols if c not in actual_schema]
@@ -80,6 +87,19 @@ def check_expected_cols(lf: pl.LazyFrame, expected_cols: Iterable[str]) -> pl.La
 
 
 def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.Expr]:
+    """Parse the validation config from a `dict[str, list[Any]]` to a `dict[str, pl.Expr]`.
+    Expects a dict:
+    ```
+    {
+        "human readable validation rule": ["col_name", "pl.col method name", Optional value],
+        "greater than 0": ["some_col", "gt", 0],
+        "is not null": ["some_other_col", "is_not_null", None],
+    }
+    ```
+    For the `"is null"` rule, there is no need for a value in the last element of the list as
+    pl.col().is_not_null() doesn't take an arg.
+    Should be noted that the rules should describe what a valid record looks like.
+    """
     logger.info(f"{rules_config = }")
 
     exprs = {}
@@ -97,6 +117,13 @@ def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.
 
 
 def validate_df(lf: pl.LazyFrame, rules: dict[str, pl.Expr]) -> tuple[pl.LazyFrame, pl.LazyFrame]:
+    """Validate the lf.
+    Applies the rules that were parsed by `parse_validation_config` to the lf.
+    Valid records are returned to the lf that is then transformed.
+    Invalid records are returned as an error records table with an added `error_reason` column.
+    The `error_reason` column could include all of the validation errors that that record failed.
+    The returned invalid lf is not processed any further by the pipeline.
+    """
     if not rules:
         logger.info(f"No rules provided: {rules = }")
         return lf, pl.LazyFrame()
