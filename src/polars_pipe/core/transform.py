@@ -253,8 +253,13 @@ def pipe_custom_transformations(
     `custom_transformation_map` is expected as
     ```
     {
-        "custom_transformation_name": {"kwarg": "kwarg_value"},
-        "other_custom_transformation_name": {"other_kwarg": "other_kwarg_value", "another_kwarg": 0},
+        "custom_transformation_name": {
+            "kwarg": "kwarg_value",
+        },
+        "other_custom_transformation_name": {
+            "other_kwarg": "other_kwarg_value",
+            "another_kwarg": 0,
+        },
     }
     ```
     If a custom function is listed in the `custom_transformation_map` that isn't in the `custom_transformation_fns`
