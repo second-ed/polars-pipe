@@ -34,13 +34,13 @@ def update_readme(pipeline_docs: str, readme_path: str = "./README.md") -> None:
     readme_txt = readme_path.read_text(encoding="utf-8")
     pattern = r"(# pipeline stages)(.*?)(::)"
     updated_readme = re.sub(pattern, rf"\1\n\n{pipeline_docs}\n\3", readme_txt, flags=re.DOTALL)
-    return readme_path.write_text(updated_readme)
+    if readme_txt != updated_readme:
+        readme_path.write_text(updated_readme)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
     matches = find_pipe_funcs()
     pipeline_docs = extract_stages_docs(matches)
-    res = update_readme(pipeline_docs)
-    if res != 0:
-        sys.exit(0)
-    sys.exit(1)
+    sys.exit(update_readme(pipeline_docs))

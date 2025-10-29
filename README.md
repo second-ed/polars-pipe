@@ -10,7 +10,7 @@ Raises a ValueError if any are missing.
 
 
 ## `add_hash_col`
-Generate deterministic hashes of the values for each row in the lf.
+Generate deterministic hashes of the values in non-system-columns for each row in the lf.
 If the column `sys_col_row_hash` is already present in the lf, it returns the lf unchanged.
 This stage cannot be skipped.
 
