@@ -81,11 +81,11 @@ Expects a dict:
 {
     "new_col_name": {
         "fn_name": "add_cols",
-        "fn_kwargs": {"cols": ["col_a", "col_b"],
+        "fn_kwargs": {"cols": ["col_a", "col_b"]},
     },
     "other_new_name": {
         "fn_name": "mul_cols",
-        "fn_kwargs": {"cols": ["col_a", "col_b", "col_c"],
+        "fn_kwargs": {"cols": ["col_a", "col_b", "col_c"]},
     }
 }
 ```
@@ -125,6 +125,9 @@ will raise a KeyError.
 ├── .github
 │   └── workflows
 │       └── ci_tests.yaml
+├── dev_tools
+│   ├── __init__.py
+│   └── update_readme.py
 ├── src
 │   └── polars_pipe
 │       ├── adapters

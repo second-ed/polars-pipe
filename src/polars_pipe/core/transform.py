@@ -218,11 +218,11 @@ def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) ->
     {
         "new_col_name": {
             "fn_name": "add_cols",
-            "fn_kwargs": {"cols": ["col_a", "col_b"],
+            "fn_kwargs": {"cols": ["col_a", "col_b"]},
         },
         "other_new_name": {
             "fn_name": "mul_cols",
-            "fn_kwargs": {"cols": ["col_a", "col_b", "col_c"],
+            "fn_kwargs": {"cols": ["col_a", "col_b", "col_c"]},
         }
     }
     ```
