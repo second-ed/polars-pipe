@@ -120,6 +120,36 @@ will raise a KeyError.
 
 ::
 
+# other features
+## guid
+As part of the processing a guid is generated. This guid is used as a subdir where the results are saved, As well as this the guid is used in the partition basename, this guarantees traceability between a config and the resulting files.
+
+The resulting file directory is as follows
+```
+└── {given_user_dst_path}/
+    └── {guid}/
+        ├── config/
+        │   └── {process_name}_{date_time}.yaml
+        ├── desc_stats/
+        │   ├── post_transform/
+        │   │   └── part-xxxxx-{guid}
+        │   └── pre_transform/
+        │       └── part-xxxxx-{guid}
+        ├── error_records/
+        │   └── part-xxxxx-{guid}
+        └── transformed_data/
+            └── part-xxxxx-{guid}
+```
+
+## lazy chunks
+Similarly to spark, this pipeline evaluates lazily, it also estimates the size of the dataframe and saves the data into 1GB chunks, this means it can work with data much bigger than memory as only 1GB of it will be evaluated at a time.
+
+## pre and post describe
+Descriptive statistics are taken post-validation but pre-transformation, this is so the effects of the transformations can be quantified in case of issues. The statistics don't include any records that failed the validation stage and are in the error_records dataframe as they may skew the values.
+
+## store explain in saved config
+After the pipe is run, the config is saved. The optimised logical plan is added to this before saving, this means that the plan can be examined after the fact.
+
 # Repo map
 ```
 ├── .github
