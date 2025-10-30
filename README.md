@@ -17,7 +17,7 @@ This stage cannot be skipped.
 
 ## `add_process_cols`
 Add columns for the given guid and process time.
-The columns are called f"sys_col_{process_name}_guid" and f"sys_col_{process_name}_datetime"
+The columns are called `f"sys_col_{process_name}_guid"` and `f"sys_col_{process_name}_datetime"`
 to allow for multiple teams to use the same pipeline and not overwrite eachothers sys_cols,
 maintaining the lineage of the data as its passed between teams.
 This stage cannot be skipped.
