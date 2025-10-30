@@ -163,15 +163,15 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                     "filter_exprs": {"no d division": ["division", "ne", "D"]},
                     "fill_map": {"bonus": 0},
                     "recast_map": {"bonus": "Int64"},
-                    "rename_map": {"bonus": "annual_bonus"},
-                    "clip_map": {"annual_bonus": (0, 500_000)},
+                    "clip_map": {"bonus": (0, 500_000)},
                     "new_col_map": {
                         "full_comp": {
                             "fn_name": "add_cols",
-                            "fn_kwargs": {"cols": ["salary", "annual_bonus"]},
+                            "fn_kwargs": {"cols": ["salary", "bonus"]},
                         },
                     },
                     "unnest_cols": ["projects"],
+                    "rename_map": {"bonus": "annual_bonus"},
                     "nest_cols": {"comp": ["salary", "annual_bonus", "full_comp"]},
                     "drop_cols": ["division"],
                 },
@@ -204,15 +204,15 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                         "filter_exprs": {"no d division": ["division", "ne", "D"]},
                         "fill_map": {"bonus": 0},
                         "recast_map": {"bonus": "Int64"},
-                        "rename_map": {"bonus": "annual_bonus"},
-                        "clip_map": {"annual_bonus": (0, 500_000)},
+                        "clip_map": {"bonus": (0, 500_000)},
                         "new_col_map": {
                             "full_comp": {
                                 "fn_name": "add_cols",
-                                "fn_kwargs": {"cols": ["salary", "annual_bonus"]},
+                                "fn_kwargs": {"cols": ["salary", "bonus"]},
                             },
                         },
                         "unnest_cols": ["projects"],
+                        "rename_map": {"bonus": "annual_bonus"},
                         "nest_cols": {"comp": ["salary", "annual_bonus", "full_comp"]},
                         "drop_cols": ["division"],
                     },
@@ -227,11 +227,11 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                         '    simple π 9/9 ["name", "project a", ... 7 other columns]',
                         "       WITH_COLUMNS:",
                         '       [col("salary").as_struct([col("annual_bonus"), col("full_comp")]).alias("comp")] ',
-                        "         WITH_COLUMNS:",
-                        '         [[(col("salary")) + (col("annual_bonus"))].alias("full_comp")] ',
+                        '        SELECT [col("name"), col("salary"), col("bonus").alias("annual_bonus"), col("project a"), col("project b"), col("project c"), col("project d"), col("sys_col_row_hash"), col("sys_col_ingest_guid"), col("sys_col_ingest_datetime"), col("full_comp")]',
                         "           WITH_COLUMNS:",
-                        '           [col("annual_bonus").clip([dyn int: 0, dyn int: 500000])] ',
-                        '            SELECT [col("name"), col("salary"), col("bonus").alias("annual_bonus"), col("project a"), col("project b"), col("project c"), col("project d"), col("sys_col_row_hash"), col("sys_col_ingest_guid"), col("sys_col_ingest_datetime")]',
+                        '           [[(col("salary")) + (col("bonus"))].alias("full_comp")] ',
+                        "             WITH_COLUMNS:",
+                        '             [col("bonus").clip([dyn int: 0, dyn int: 500000])] ',
                         "               WITH_COLUMNS:",
                         '               [col("bonus").strict_cast(Int64)] ',
                         "                 WITH_COLUMNS:",
@@ -401,7 +401,11 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
             id="should skip all stages if not given config",
         ),
         pytest.param(
-            {abs_path("./path/to/raw_data.parquet"): BASIC_INPUT_DF},
+            {
+                abs_path("./path/to/raw_data.parquet"): BASIC_INPUT_DF.with_columns(
+                    pl.lit(0).alias("sys_col_row_hash")
+                )
+            },
             {
                 "process_name": "ingest",
                 "src_path": "./path/to/raw_data.parquet",
@@ -425,7 +429,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
                             "sys_col_ingest_guid": "abc-123",
-                            "sys_col_row_hash": 6792230521060155726,
+                            "sys_col_row_hash": 0,
                         },
                         {
                             "name": "ben",
@@ -434,7 +438,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
                             "sys_col_ingest_guid": "abc-123",
-                            "sys_col_row_hash": 16546676625329609454,
+                            "sys_col_row_hash": 0,
                         },
                         {
                             "name": "charlie",
@@ -443,7 +447,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
                             "sys_col_ingest_guid": "abc-123",
-                            "sys_col_row_hash": 16397991471585692086,
+                            "sys_col_row_hash": 0,
                         },
                         {
                             "name": None,
@@ -452,7 +456,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
                             "sys_col_ingest_guid": "abc-123",
-                            "sys_col_row_hash": 16397991471585692086,
+                            "sys_col_row_hash": 0,
                         },
                         {
                             "name": "dani",
@@ -461,7 +465,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
                             "sys_col_ingest_guid": "abc-123",
-                            "sys_col_row_hash": 3979787036476502685,
+                            "sys_col_row_hash": 0,
                         },
                         {
                             "name": "emily",
@@ -470,7 +474,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                                 2025, 10, 16, 12, 0, tzinfo=datetime.UTC
                             ),
                             "sys_col_ingest_guid": "abc-123",
-                            "sys_col_row_hash": 16442676451241693571,
+                            "sys_col_row_hash": 0,
                         },
                     ]
                 ),
@@ -491,12 +495,11 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                     "custom_transformations": {},
                     "select_cols": ["name", "salary"],
                     "pipeline_plan": [
-                        'simple π 5/5 ["name", "salary", ... 3 other columns]',
+                        " WITH_COLUMNS:",
+                        ' [col("sys_col_ingest_guid").str.strip_chars([null]).str.lowercase()] ',
                         "   WITH_COLUMNS:",
-                        '   [col("sys_col_ingest_guid").str.strip_chars([null]).str.lowercase()] ',
-                        "     WITH_COLUMNS:",
-                        '     [col("name").str.concat_horizontal([col("salary").strict_cast(String), col("division"), col("bonus").strict_cast(String), col("projects").struct.to_json()]).hash().alias("sys_col_row_hash"), "abc-123".alias("sys_col_ingest_guid"), 2025-10-16 12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), col("name").str.strip_chars([null]).str.lowercase()] ',
-                        '      DF ["name", "salary", "division", "bonus", ...]; PROJECT["name", "salary", "division", "bonus", ...] 5/5 COLUMNS',
+                        '   ["abc-123".alias("sys_col_ingest_guid"), 2025-10-16 12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), col("name").str.strip_chars([null]).str.lowercase()] ',
+                        '    DF ["name", "salary", "division", "bonus", ...]; PROJECT["name", "salary", "sys_col_row_hash"] 3/6 COLUMNS',
                     ],
                 },
             },

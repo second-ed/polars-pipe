@@ -61,12 +61,6 @@ If no recast_map is provided, exits early returning the given lazyframe.
 Expects a dict of `{"col_name": pl.DataType}`.
 
 
-## `rename_df_cols`
-Rename columns to new names.
-If no rename_map is provided, exits early returning the given lazyframe.
-Expects a dict of `{"old_col_name": "new_col_name"}`.
-
-
 ## `clip_df_cols`
 Clip values for given columns with min/max.
 If no clip_map is provided, exits early returning the given lazyframe.
@@ -90,6 +84,12 @@ Expects a dict:
 }
 ```
 Currently the valid derived functions are pulled from the derive_cols.py file.
+
+
+## `rename_df_cols`
+Rename columns to new names.
+If no rename_map is provided, exits early returning the given lazyframe.
+Expects a dict of `{"old_col_name": "new_col_name"}`.
 
 
 ## `nest_df_cols`
