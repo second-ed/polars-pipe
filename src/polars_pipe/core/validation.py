@@ -73,7 +73,7 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
 
 
 def check_expected_cols(lf: pl.LazyFrame, expected_cols: Iterable[str]) -> pl.LazyFrame:
-    """Check whether the expected columns are in the lf schema.
+    """Check whether the expected columns are in the lazyframe schema.
     Raises a ValueError if any are missing.
     """
     logger.info(f"{expected_cols = }")
@@ -117,12 +117,12 @@ def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.
 
 
 def validate_df(lf: pl.LazyFrame, rules: dict[str, pl.Expr]) -> tuple[pl.LazyFrame, pl.LazyFrame]:
-    """Validate the lf.
-    Applies the rules that were parsed by `parse_validation_config` to the lf.
-    Valid records are returned to the lf that is then transformed.
+    """Validate the lazyframe.
+    Applies the rules that were parsed by `parse_validation_config` to the lazyframe.
+    Valid records are returned to the lazyframe that is then transformed.
     Invalid records are returned as an error records table with an added `error_reason` column.
     The `error_reason` column could include all of the validation errors that that record failed.
-    The returned invalid lf is not processed any further by the pipeline.
+    The returned invalid lazyframe is not processed any further by the pipeline.
     """
     if not rules:
         logger.info(f"No rules provided: {rules = }")

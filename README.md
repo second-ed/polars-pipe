@@ -5,13 +5,13 @@ This is a basic pipeline for DE processing. The pipeline stages section describe
 
 
 ## `check_expected_cols`
-Check whether the expected columns are in the lf schema.
+Check whether the expected columns are in the lazyframe schema.
 Raises a ValueError if any are missing.
 
 
 ## `add_hash_col`
-Generate deterministic hashes of the values in non-system-columns for each row in the lf.
-If the column `sys_col_row_hash` is already present in the lf, it returns the lf unchanged.
+Generate deterministic hashes of the values in non-system-columns for each row in the lazyframe.
+If the column `sys_col_row_hash` is already present in the lazyframe, it returns the lazyframe unchanged.
 This stage cannot be skipped.
 
 
@@ -24,12 +24,12 @@ This stage cannot be skipped.
 
 
 ## `validate_df`
-Validate the lf.
-Applies the rules that were parsed by `parse_validation_config` to the lf.
-Valid records are returned to the lf that is then transformed.
+Validate the lazyframe.
+Applies the rules that were parsed by `parse_validation_config` to the lazyframe.
+Valid records are returned to the lazyframe that is then transformed.
 Invalid records are returned as an error records table with an added `error_reason` column.
 The `error_reason` column could include all of the validation errors that that record failed.
-The returned invalid lf is not processed any further by the pipeline.
+The returned invalid lazyframe is not processed any further by the pipeline.
 
 
 ## `normalise_str_cols`
@@ -39,43 +39,43 @@ This stage cannot be skipped.
 
 ## `unnest_df_cols`
 Unnest given columns from struct columns.
-If no unnest_cols is provided, exits early returning the given lf.
+If no unnest_cols is provided, exits early returning the given lazyframe.
 Expects a list of `["struct_col_a", "struct_col_b", "struct_col_c"]`.
 
 
 ## `filter_df`
-Filter the lf where all the given expressions are true.
-If no filter_exprs is provided, exits early returning the given lf.
+Filter the lazyframe where all the given expressions are true.
+If no filter_exprs is provided, exits early returning the given lazyframe.
 Expects a list of polars expressions: `list[pl.Expr]`.
 
 
 ## `fill_nulls_per_col`
 Fill nulls for given columns with value.
-If no fill_map is provided, exits early returning the given lf.
+If no fill_map is provided, exits early returning the given lazyframe.
 Expects a dict of `{"col_name": "fill value"}`.
 
 
 ## `recast_df_cols`
 Recast columns to new datatypes.
-If no recast_map is provided, exits early returning the given lf.
+If no recast_map is provided, exits early returning the given lazyframe.
 Expects a dict of `{"col_name": pl.DataType}`.
 
 
 ## `rename_df_cols`
 Rename columns to new names.
-If no rename_map is provided, exits early returning the given lf.
+If no rename_map is provided, exits early returning the given lazyframe.
 Expects a dict of `{"old_col_name": "new_col_name"}`.
 
 
 ## `clip_df_cols`
 Clip values for given columns with min/max.
-If no clip_map is provided, exits early returning the given lf.
+If no clip_map is provided, exits early returning the given lazyframe.
 Expects a dict of `{"col_name": (min_val, max_val)}`.
 
 
 ## `derive_new_cols`
 Derive new columns from existing columns.
-If no new_col_map is provided, exits early returning the given lf.
+If no new_col_map is provided, exits early returning the given lazyframe.
 Expects a dict:
 ```
 {
@@ -94,19 +94,19 @@ Currently the valid derived functions are pulled from the derive_cols.py file.
 
 ## `nest_df_cols`
 Nest given columns into a struct column.
-If no nest_cols is provided, exits early returning the given lf.
+If no nest_cols is provided, exits early returning the given lazyframe.
 Expects a dict of `{"struct_col_name": ["col_a", "col_b", "col_c"]}`.
 
 
 ## `drop_df_cols`
-Drop the given columns from the lf.
-If no drop_cols are provided, exits early returning the given lf.
+Drop the given columns from the lazyframe.
+If no drop_cols are provided, exits early returning the given lazyframe.
 Expects a list of `["col_to_drop_a", "col_to_drop_b"]`
 
 
 ## `pipe_custom_transformations`
-Apply custom transformations to the lf.
-If no custom_transformation_map is provided, exits early returning the given lf.
+Apply custom transformations to the lazyframe.
+If no custom_transformation_map is provided, exits early returning the given lazyframe.
 Must be given a dict of functions that meet this protocol: `dict[str, Callable[[pl.LazyFrame, Any], pl.LazyFrame]]`.
 `custom_transformation_map` is expected as
 ```
