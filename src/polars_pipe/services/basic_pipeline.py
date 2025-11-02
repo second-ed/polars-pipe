@@ -18,7 +18,7 @@ def run_pipeline(
     custom_transformation_fns: dict[str, Callable] | None = None,
 ) -> None:
     date_time = io_wrapper.get_datetime()
-    config["guid"] = io_wrapper.get_guid()
+    config["guid"] = io_wrapper.new_guid()
     config["date_time"] = date_time
 
     parsed_config = cf.GeneralConfig.from_dict(config)

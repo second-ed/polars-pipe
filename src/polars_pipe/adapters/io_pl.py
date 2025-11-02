@@ -81,16 +81,13 @@ class IOBase(ABC):
             offset = i * rows_per_chunk
             length = min(rows_per_chunk, total_rows - offset)
             chunk_df = lf.slice(offset, length).collect()
-            part_path = base_path / f"part-{i:05d}-{self.get_guid()}.{ext.lower()}"
+            part_path = base_path / f"part-{i:05d}-{self.guid}.{ext.lower()}"
             logger.debug(f"Writing partition {i = } to {part_path = }")
             write_func(chunk_df, part_path, **fwd_kwargs)
 
     @abstractmethod
     def new_guid(self) -> str:
         pass
-
-    def get_guid(self) -> str:
-        return self.guid if self.guid is not None else self.new_guid()
 
     @abstractmethod
     def get_datetime(self) -> datetime.datetime:
