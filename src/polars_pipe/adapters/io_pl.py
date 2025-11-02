@@ -27,7 +27,7 @@ class IOBase(ABC):
             msg = f"`read` is not implemented for {file_type}"
             logger.error(msg)
             raise NotImplementedError(msg)
-        return self._read_funcs[file_type](path, **kwargs)
+        return self._read_funcs[file_type](path, **kwargs).lazy()
 
     def write(
         self, data: pl.LazyFrame | dict, path: str, file_type: FileType | str, **kwargs: dict
