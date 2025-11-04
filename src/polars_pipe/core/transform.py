@@ -204,10 +204,11 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     return lf.filter(combined_filter)
 
 
-DERIVE_FNS = {
+CUSTOM_DERIVE_FNS = {
     k: v for k, v in inspect.getmembers(derive_cols, inspect.isfunction) if not k.startswith("_")
 }
-logger.info(f"{DERIVE_FNS = }")
+logger.info(f"{CUSTOM_DERIVE_FNS = }")
+ALL_DERIVE_FNS = {**derive_cols.PL_EXPR_FNS, **CUSTOM_DERIVE_FNS}
 
 
 def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) -> pl.LazyFrame:
@@ -234,7 +235,7 @@ def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) ->
 
     logger.info(f"Deriving new columns: {new_col_map = }")
     derived_transforms = {
-        derived_col_name: partial(DERIVE_FNS[fn_config["fn_name"]], **fn_config["fn_kwargs"])
+        derived_col_name: partial(ALL_DERIVE_FNS[fn_config["fn_name"]], **fn_config["fn_kwargs"])
         for derived_col_name, fn_config in new_col_map.items()
     }
 
