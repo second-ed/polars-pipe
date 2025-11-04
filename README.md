@@ -83,7 +83,20 @@ Expects a dict:
     }
 }
 ```
-Currently the valid derived functions are pulled from the derive_cols.py file.
+As well as the row-wise operator columns, you can use any existing method on a pl.Expr:
+```
+{
+    "new_col_from_expression": {
+        "fn_name": "col_method_name",
+        "fn_kwargs": {"col": "some_col_name"},
+    },
+    # e.g:
+    "cumulative_wind": {
+        "fn_name": "cum_sum",
+        "fn_kwargs": {"col": "wind_mph"},
+    }
+}
+```
 
 
 ## `rename_df_cols`
