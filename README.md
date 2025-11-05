@@ -37,6 +37,12 @@ Normalise the string columns by stripping whitespace and converting to lowercase
 This stage cannot be skipped.
 
 
+## `deduplicate_rows`
+Deduplicate rows in the dataframe based on a subset of columns, can provide `["*"]` for all columns.
+If no subset_cols is provided, exits early returning the given lazyframe.
+Expects `list[str]`.
+
+
 ## `unnest_df_cols`
 Unnest given columns from struct columns.
 If no unnest_cols is provided, exits early returning the given lazyframe.

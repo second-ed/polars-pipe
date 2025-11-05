@@ -32,6 +32,7 @@ class TransformConfig:
     clip_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
     filter_exprs: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     new_col_map: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
+    dedupe_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     unnest_cols: list = attrs.field(factory=list, validator=attrs.validators.instance_of(list))
     nest_cols: dict = attrs.field(factory=dict, validator=attrs.validators.instance_of(dict))
 
@@ -202,6 +203,18 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     logger.info(f"Filtering df: {filter_exprs = }")
     combined_filter = pl.all_horizontal(filter_exprs)
     return lf.filter(combined_filter)
+
+
+def deduplicate_rows(lf: pl.LazyFrame, subset_cols: list[str]) -> pl.LazyFrame:
+    """Deduplicate rows in the dataframe based on a subset of columns, can provide `["*"]` for all columns.
+    If no subset_cols is provided, exits early returning the given lazyframe.
+    Expects `list[str]`.
+    """
+    if not subset_cols:
+        logger.info(f"No subset_cols provided: {subset_cols = }")
+        return lf
+    logger.info(f"Deduplicating df: {subset_cols = }")
+    return lf.unique(subset=subset_cols, maintain_order=True)
 
 
 CUSTOM_DERIVE_FNS = {

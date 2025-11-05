@@ -51,7 +51,8 @@ def run_pipeline(
 
     transformed_lf = (
         valid_lf.pipe(tf.normalise_str_cols)
-        .pipe(tf.unnest_df_cols, tf_config.unnest_cols)
+        .pipe(tf.deduplicate_rows, subset_cols=tf_config.dedupe_cols)
+        .pipe(tf.unnest_df_cols, unnest_cols=tf_config.unnest_cols)
         .pipe(tf.filter_df, filter_exprs=tf_config.filter_exprs)
         .pipe(tf.fill_nulls_per_col, fill_map=tf_config.fill_map)
         .pipe(tf.recast_df_cols, recast_map=tf_config.recast_map)
