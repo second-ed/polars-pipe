@@ -109,6 +109,23 @@ def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
     )
 
 
+def standardise_col_names_if_no_case_insensitive_dupes(lf: pl.LazyFrame) -> pl.LazyFrame:
+    """Standardise the column names, lowered and stripped.
+    If there are case insensitive duplicates then this operation is skipped and the given lf is returned.
+    This is run at the end before saving the transformed data to avoid having to translate all column references in the config.
+    """
+    cols = lf.collect_schema().names()
+    lowered = [c.lower().strip() for c in cols]
+
+    if len(lowered) != len(set(lowered)):
+        logger.info("There are case insensitive duplicates in the column names, skipping")
+        return lf
+
+    return rename_df_cols(
+        lf, {col: std_col for col in cols if (std_col := col.lower().strip()) != col}
+    )
+
+
 def drop_df_cols(lf: pl.LazyFrame, drop_cols: list[str]) -> pl.LazyFrame:
     """Drop the given columns from the lazyframe.
     If no drop_cols are provided, exits early returning the given lazyframe.

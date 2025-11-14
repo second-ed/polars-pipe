@@ -73,6 +73,7 @@ def run_pipeline(
             cs.by_name(*parsed_config.select_cols) - cs.starts_with("sys_col"),
             cs.starts_with("sys_col"),
         )
+        .pipe(tf.standardise_col_names_if_no_case_insensitive_dupes)
     )
 
     parsed_config.pipeline_plan = transformed_lf.explain().splitlines()

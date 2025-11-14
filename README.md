@@ -142,6 +142,12 @@ Must be given a dict of functions that meet this protocol: `dict[str, Callable[[
 If a custom function is listed in the `custom_transformation_map` that isn't in the `custom_transformation_fns`
 will raise a KeyError.
 
+
+## `standardise_col_names_if_no_case_insensitive_dupes`
+Standardise the column names, lowered and stripped.
+If there are case insensitive duplicates then this operation is skipped and the given lf is returned.
+This is run at the end before saving the transformed data to avoid having to translate all column references in the config.
+
 ::
 
 # other features

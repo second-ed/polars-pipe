@@ -278,7 +278,7 @@ def mock_custom_transformation(lf: pl.LazyFrame, status: str) -> pl.LazyFrame:
                         '                                  FILTER [(col("error_reason")) == ("")]',
                         "                                  FROM",
                         "                                     WITH_COLUMNS:",
-                        f'                                     [col("name").str.concat_horizontal([col("salary").strict_cast(String), col("division"), col("bonus").strict_cast(String), col("projects").struct.to_json()]).hash().alias("sys_col_row_hash"), "abc-123".alias("sys_col_ingest_guid"), "{REPO_ROOT}/path/to/raw_data.parquet".alias("sys_col_ingest_src_path"), 2025-10-16 12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), when(col("name").is_null()).then("missing name").otherwise("").str.concat_horizontal().str.strip_chars([","]).alias("error_reason")] ',
+                        f'                                     [col("name").str.concat_horizontal([col("salary").strict_cast(String), col("division"), col("bonus").strict_cast(String), col("projects").struct.to_json()]).hash().alias("sys_col_row_hash"), "abc-123".alias("sys_col_ingest_guid"), "{REPO_ROOT}/path/to/raw_data.parquet".alias("sys_col_ingest_src_path"), 2025-10-16 12:00:00.dt.replace_time_zone(["earliest"]).alias("sys_col_ingest_datetime"), when(col("name").is_not_null().not()).then("missing name").otherwise("").str.concat_horizontal().str.strip_chars([","]).alias("error_reason")] ',
                         '                                      DF ["name", "salary", "division", "bonus", ...]; PROJECT["name", "salary", "division", "bonus", ...] 5/5 COLUMNS',
                     ],
                 },
