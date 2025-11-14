@@ -32,6 +32,19 @@ The `error_reason` column could include all of the validation errors that that r
 The returned invalid lazyframe is not processed any further by the pipeline.
 
 
+## `describe_lf`
+Capture basic descriptive statistics for the lazyframe.
+Can be given custom statistics expects: `dict[str, Callable[[str], pl.Expr]`.
+As default the following checks are run:
+```
+{
+    "null_proportion": _calculate_null_proportion,
+    "n_unique": _calculate_n_unique,
+}
+```
+This stage is run both pre-transform and post-transform so the change in the values can be inspected by the user.
+
+
 ## `normalise_str_cols`
 Normalise the string columns by stripping whitespace and converting to lowercase.
 This stage cannot be skipped.

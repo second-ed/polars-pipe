@@ -3,8 +3,9 @@ import re
 import sys
 from pathlib import Path
 
-from polars_pipe.core import transform as tf
-from polars_pipe.core import validation as vl
+import polars_pipe.core.inspect as ins
+import polars_pipe.core.transform as tf
+import polars_pipe.core.validation as vl
 
 
 def find_pipe_funcs(
@@ -19,6 +20,7 @@ def extract_stages_docs(matches: list[str]) -> str:
     fns = {
         **dict(inspect.getmembers(tf, inspect.isroutine)),
         **dict(inspect.getmembers(vl, inspect.isroutine)),
+        **dict(inspect.getmembers(ins, inspect.isroutine)),
     }
 
     lines = []
@@ -26,7 +28,7 @@ def extract_stages_docs(matches: list[str]) -> str:
         lines.append(f"\n## `{m}`")
         if (doc := fns[m].__doc__) is not None:
             lines.append("\n".join([line.removeprefix("    ") for line in doc.splitlines()]))
-    return "\n".join(lines)
+    return "\n".join(list(dict.fromkeys(lines)))
 
 
 def update_readme(pipeline_docs: str, readme_path: str = "./README.md") -> None:

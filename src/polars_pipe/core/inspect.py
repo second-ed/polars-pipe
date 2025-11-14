@@ -29,6 +29,17 @@ CUSTOM_STATISTICS = {"null_proportion": _calculate_null_proportion, "n_unique": 
 def describe_lf(
     lf: pl.LazyFrame, custom_statistics: dict[str, Callable[[str], pl.Expr]] = CUSTOM_STATISTICS
 ) -> pl.LazyFrame:
+    """Capture basic descriptive statistics for the lazyframe.
+    Can be given custom statistics expects: `dict[str, Callable[[str], pl.Expr]`.
+    As default the following checks are run:
+    ```
+    {
+        "null_proportion": _calculate_null_proportion,
+        "n_unique": _calculate_n_unique,
+    }
+    ```
+    This stage is run both pre-transform and post-transform so the change in the values can be inspected by the user.
+    """
     described_df = lf.describe().cast(pl.String)
 
     for name, fn in custom_statistics.items():

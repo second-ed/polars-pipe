@@ -41,7 +41,7 @@ def run_pipeline(
     )
 
     io_wrapper.write(
-        ins.describe_lf(valid_lf),
+        valid_lf.pipe(ins.describe_lf),
         Path(parsed_config.dst_root).joinpath(
             parsed_config.guid, parsed_config.desc_stats_stem, "pre_transform"
         ),
@@ -105,7 +105,7 @@ def run_pipeline(
         )
 
     io_wrapper.write(
-        ins.describe_lf(transformed_lf),
+        transformed_lf.pipe(ins.describe_lf),
         Path(parsed_config.dst_root).joinpath(
             parsed_config.guid, parsed_config.desc_stats_stem, "post_transform"
         ),
