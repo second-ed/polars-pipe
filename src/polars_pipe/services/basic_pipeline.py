@@ -32,7 +32,8 @@ def run_pipeline(
         .pipe(tf.add_hash_col)
         .pipe(
             tf.add_process_cols,
-            guid=parsed_config.guid,
+            guid=io_wrapper.guid,
+            src_path=parsed_config.src_path,
             date_time=date_time,
             process_name=parsed_config.process_name,
         )

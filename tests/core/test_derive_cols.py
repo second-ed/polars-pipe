@@ -25,7 +25,7 @@ from tests.conftest import BASIC_DF
         pytest.param(BASIC_DF, dc.div_cols, [], None, pytest.raises(ValueError)),
     ],
 )
-def test_derive_cols(raw_data, derive_fn, cols, expected_series_values, expected_context):
+def test_derive_fns(raw_data, derive_fn, cols, expected_series_values, expected_context):
     with expected_context:
         assert (
             raw_data.with_columns(derive_fn(cols).alias("result")).to_dicts()

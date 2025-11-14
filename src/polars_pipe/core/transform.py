@@ -75,10 +75,14 @@ def add_hash_col(lf: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def add_process_cols(
-    lf: pl.LazyFrame, guid: str, date_time: datetime, process_name: str = "process"
+    lf: pl.LazyFrame,
+    date_time: datetime,
+    guid: str,
+    src_path: str,
+    process_name: str = "process",
 ) -> pl.LazyFrame:
-    """Add columns for the given guid and process time.
-    The columns are called `f"sys_col_{process_name}_guid"` and `f"sys_col_{process_name}_datetime"`
+    """Add columns for the given source file path and process time.
+    The columns are called `f"sys_col_{process_name}_src_path"` and `f"sys_col_{process_name}_datetime"`
     to allow for multiple teams to use the same pipeline and not overwrite eachothers sys_cols,
     maintaining the lineage of the data as its passed between teams.
     This stage cannot be skipped.
@@ -86,6 +90,7 @@ def add_process_cols(
     return lf.with_columns(
         [
             pl.lit(guid).alias(f"sys_col_{process_name}_guid"),
+            pl.lit(src_path).alias(f"sys_col_{process_name}_src_path"),
             pl.lit(date_time).alias(f"sys_col_{process_name}_datetime"),
         ]
     )
@@ -99,7 +104,7 @@ def normalise_str_cols(lf: pl.LazyFrame) -> pl.LazyFrame:
         [
             pl.col(col_name).str.strip_chars().str.to_lowercase()
             for col_name, dtype in lf.collect_schema().items()
-            if dtype == pl.Utf8
+            if dtype == pl.Utf8 and not col_name.startswith("sys_col_")
         ]
     )
 
