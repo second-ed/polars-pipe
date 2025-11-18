@@ -6,7 +6,7 @@ from typing import Any
 import polars as pl
 
 from polars_pipe.core.config import GeneralConfig
-from polars_pipe.core.logger import logger
+from polars_pipe.core.logger import get_fn_name, logger
 
 
 def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
@@ -52,7 +52,7 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
     reverse_rename_map = {
         new: old for old, new in parsed_config.transformations.get("rename_map", {}).items()
     }
-    logger.info(f"{reverse_rename_map = }")
+    logger.info(f"{get_fn_name()}. {reverse_rename_map = }")
 
     new_cols = list(parsed_config.transformations.get("new_col_map", {}))
 
@@ -68,7 +68,7 @@ def extract_expected_cols(parsed_config: GeneralConfig) -> set[str]:
     expected_cols.update(
         collect_original_names_expr(parsed_config.validation, reverse_rename_map, new_cols)
     )
-    logger.info(f"{expected_cols = }")
+    logger.info(f"{get_fn_name()}. {expected_cols = }")
     return expected_cols
 
 
@@ -76,7 +76,7 @@ def check_expected_cols(lf: pl.LazyFrame, expected_cols: Iterable[str]) -> pl.La
     """Check whether the expected columns are in the lazyframe schema.
     Raises a ValueError if any are missing.
     """
-    logger.info(f"{expected_cols = }")
+    logger.info(f"{get_fn_name()}. {expected_cols = }")
     actual_schema = lf.collect_schema().names()
     missing = [c for c in expected_cols if c not in actual_schema]
     if missing:
@@ -100,7 +100,7 @@ def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.
     pl.col().is_not_null() doesn't take an arg.
     Should be noted that the rules should describe what a valid record looks like.
     """
-    logger.info(f"{rules_config = }")
+    logger.info(f"{get_fn_name()}. {rules_config = }")
 
     exprs = {}
 
@@ -112,7 +112,7 @@ def parse_validation_config(rules_config: dict[str, list[Any]]) -> dict[str, pl.
             else getattr(pl.col(col_name), operation)()
         )
 
-    logger.info(f"{exprs = }")
+    logger.info(f"{get_fn_name()}. {exprs = }")
     return exprs
 
 
@@ -125,7 +125,7 @@ def validate_df(lf: pl.LazyFrame, rules: dict[str, pl.Expr]) -> tuple[pl.LazyFra
     The returned invalid lazyframe is not processed any further by the pipeline.
     """
     if not rules:
-        logger.info(f"No rules provided: {rules = }")
+        logger.info(f"{get_fn_name()}. No rules provided: {rules = }")
         return lf, pl.LazyFrame()
 
     validated_lf = lf.with_columns(

@@ -1,3 +1,4 @@
+import inspect
 import logging
 import os
 import sys
@@ -31,3 +32,7 @@ if os.getenv("LOGGING_ENABLED", "false").lower() == "true" and "pytest" not in s
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
     logger.info("Activating logger...")
+
+
+def get_fn_name() -> str:
+    return f"fn = `{inspect.currentframe().f_back.f_code.co_name}`"

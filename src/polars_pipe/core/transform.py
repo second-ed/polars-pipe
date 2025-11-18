@@ -15,12 +15,12 @@ from polars.datatypes._parse import is_polars_dtype
 
 import polars_pipe.core.validation as vl
 from polars_pipe.core import derive_cols
-from polars_pipe.core.logger import logger
+from polars_pipe.core.logger import get_fn_name, logger
 
 POLARS_DTYPE_MAPPING = MappingProxyType(
     {k: v for k, v in inspect.getmembers(pl_dtypes) if is_polars_dtype(v)}
 )
-logger.info(f"{POLARS_DTYPE_MAPPING = }")
+logger.info(f"{get_fn_name()}. {POLARS_DTYPE_MAPPING = }")
 
 
 @attrs.define(frozen=True)
@@ -118,7 +118,9 @@ def standardise_col_names_if_no_case_insensitive_dupes(lf: pl.LazyFrame) -> pl.L
     lowered = [c.lower().strip() for c in cols]
 
     if len(lowered) != len(set(lowered)):
-        logger.info("There are case insensitive duplicates in the column names, skipping")
+        logger.info(
+            f"{get_fn_name()}. There are case insensitive duplicates in the column names, skipping"
+        )
         return lf
 
     return rename_df_cols(
@@ -132,9 +134,9 @@ def drop_df_cols(lf: pl.LazyFrame, drop_cols: list[str]) -> pl.LazyFrame:
     Expects a list of `["col_to_drop_a", "col_to_drop_b"]`
     """
     if not drop_cols:
-        logger.info(f"No drop_cols provided: {drop_cols = }")
+        logger.info(f"{get_fn_name()}. No drop_cols provided: {drop_cols = }")
         return lf
-    logger.info(f"Dropping: {drop_cols = }")
+    logger.info(f"{get_fn_name()}. Dropping: {drop_cols = }")
     return lf.drop(drop_cols)
 
 
@@ -144,9 +146,9 @@ def rename_df_cols(lf: pl.LazyFrame, rename_map: dict[str, str]) -> pl.LazyFrame
     Expects a dict of `{"old_col_name": "new_col_name"}`.
     """
     if not rename_map:
-        logger.info(f"No rename_map provided: {rename_map = }")
+        logger.info(f"{get_fn_name()}. No rename_map provided: {rename_map = }")
         return lf
-    logger.info(f"Renaming: {rename_map = }")
+    logger.info(f"{get_fn_name()}. Renaming: {rename_map = }")
     return lf.rename(rename_map)
 
 
@@ -156,9 +158,9 @@ def recast_df_cols(lf: pl.LazyFrame, recast_map: dict[str, pl.DataType]) -> pl.L
     Expects a dict of `{"col_name": pl.DataType}`.
     """
     if not recast_map:
-        logger.info(f"No recast_map provided: {recast_map = }")
+        logger.info(f"{get_fn_name()}. No recast_map provided: {recast_map = }")
         return lf
-    logger.info(f"Recasting: {recast_map = }")
+    logger.info(f"{get_fn_name()}. Recasting: {recast_map = }")
     return lf.with_columns([pl.col(col).cast(dtype) for col, dtype in recast_map.items()])
 
 
@@ -168,9 +170,9 @@ def fill_nulls_per_col(lf: pl.LazyFrame, fill_map: dict[str, Any]) -> pl.LazyFra
     Expects a dict of `{"col_name": "fill value"}`.
     """
     if not fill_map:
-        logger.info(f"No fill_map provided: {fill_map = }")
+        logger.info(f"{get_fn_name()}. No fill_map provided: {fill_map = }")
         return lf
-    logger.info(f"Filling nulls: {fill_map = }")
+    logger.info(f"{get_fn_name()}. Filling nulls: {fill_map = }")
     return lf.with_columns([pl.col(col).fill_null(value) for col, value in fill_map.items()])
 
 
@@ -180,9 +182,9 @@ def clip_df_cols(lf: pl.LazyFrame, clip_map: dict[str, tuple[float, float]]) -> 
     Expects a dict of `{"col_name": (min_val, max_val)}`.
     """
     if not clip_map:
-        logger.info(f"No clip_map provided: {clip_map = }")
+        logger.info(f"{get_fn_name()}. No clip_map provided: {clip_map = }")
         return lf
-    logger.info(f"Clipping values: {clip_map = }")
+    logger.info(f"{get_fn_name()}. Clipping values: {clip_map = }")
     return lf.with_columns(
         [pl.col(col).clip(lower, upper) for col, (lower, upper) in clip_map.items()]
     )
@@ -194,7 +196,7 @@ def nest_df_cols(lf: pl.LazyFrame, nest_cols: dict[str, list[str]]) -> pl.LazyFr
     Expects a dict of `{"struct_col_name": ["col_a", "col_b", "col_c"]}`.
     """
     if not nest_cols:
-        logger.info(f"No nest_cols provided: {nest_cols = }")
+        logger.info(f"{get_fn_name()}. No nest_cols provided: {nest_cols = }")
         return lf
 
     return lf.with_columns(
@@ -208,9 +210,9 @@ def unnest_df_cols(lf: pl.LazyFrame, unnest_cols: list[str]) -> pl.LazyFrame:
     Expects a list of `["struct_col_a", "struct_col_b", "struct_col_c"]`.
     """
     if not unnest_cols:
-        logger.info(f"No unnest_cols provided: {unnest_cols = }")
+        logger.info(f"{get_fn_name()}. No unnest_cols provided: {unnest_cols = }")
         return lf
-    logger.info(f"Unnesting: {unnest_cols = }")
+    logger.info(f"{get_fn_name()}. Unnesting: {unnest_cols = }")
     return lf.unnest(unnest_cols)
 
 
@@ -220,9 +222,9 @@ def filter_df(lf: pl.LazyFrame, filter_exprs: list[pl.Expr]) -> pl.LazyFrame:
     Expects a list of polars expressions: `list[pl.Expr]`.
     """
     if not filter_exprs:
-        logger.info(f"No filter_exprs provided: {filter_exprs = }")
+        logger.info(f"{get_fn_name()}. No filter_exprs provided: {filter_exprs = }")
         return lf
-    logger.info(f"Filtering df: {filter_exprs = }")
+    logger.info(f"{get_fn_name()}. Filtering df: {filter_exprs = }")
     combined_filter = pl.all_horizontal(filter_exprs)
     return lf.filter(combined_filter)
 
@@ -233,16 +235,16 @@ def deduplicate_rows(lf: pl.LazyFrame, subset_cols: list[str]) -> pl.LazyFrame:
     Expects `list[str]`.
     """
     if not subset_cols:
-        logger.info(f"No subset_cols provided: {subset_cols = }")
+        logger.info(f"{get_fn_name()}. No subset_cols provided: {subset_cols = }")
         return lf
-    logger.info(f"Deduplicating df: {subset_cols = }")
+    logger.info(f"{get_fn_name()}. Deduplicating df: {subset_cols = }")
     return lf.unique(subset=subset_cols, maintain_order=True)
 
 
 CUSTOM_DERIVE_FNS = {
     k: v for k, v in inspect.getmembers(derive_cols, inspect.isfunction) if not k.startswith("_")
 }
-logger.info(f"{CUSTOM_DERIVE_FNS = }")
+logger.info(f"{get_fn_name()}. {CUSTOM_DERIVE_FNS = }")
 ALL_DERIVE_FNS = {**derive_cols.PL_EXPR_FNS, **CUSTOM_DERIVE_FNS}
 
 
@@ -278,10 +280,10 @@ def derive_new_cols(lf: pl.LazyFrame, new_col_map: dict[str, dict[str, str]]) ->
     ```
     """
     if not new_col_map:
-        logger.info(f"No new_col_map provided: {new_col_map = }")
+        logger.info(f"{get_fn_name()}. No new_col_map provided: {new_col_map = }")
         return lf
 
-    logger.info(f"Deriving new columns: {new_col_map = }")
+    logger.info(f"{get_fn_name()}. Deriving new columns: {new_col_map = }")
     derived_transforms = {
         derived_col_name: partial(ALL_DERIVE_FNS[fn_config["fn_name"]], **fn_config["fn_kwargs"])
         for derived_col_name, fn_config in new_col_map.items()
@@ -315,11 +317,13 @@ def pipe_custom_transformations(
     will raise a KeyError.
     """
     if not custom_transformation_map:
-        logger.info(f"No custom_transformation_map provided: {custom_transformation_map = }")
+        logger.info(
+            f"{get_fn_name()}. No custom_transformation_map provided: {custom_transformation_map = }"
+        )
         return lf
 
     for fn_name, kwargs in custom_transformation_map.items():
-        logger.info(f"Applying custom transformation: {fn_name = } {kwargs = }")
+        logger.info(f"{get_fn_name()}. Applying custom transformation: {fn_name = } {kwargs = }")
         func = custom_transformation_fns[fn_name]
         lf = lf.pipe(func, **kwargs)
     return lf
