@@ -18,6 +18,12 @@ from polars_pipe.core.logger import logger
 @attrs.define
 class IOBase(ABC):
     guid: str | None = attrs.field(default=None, validator=optional(instance_of(str)))
+    _read_funcs: MappingProxyType = attrs.field(
+        default=READ_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
+    )
+    _write_funcs: MappingProxyType = attrs.field(
+        default=WRITE_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
+    )
 
     def read(self, path: str, file_type: FileType | str, **kwargs: dict) -> pl.LazyFrame:
         logger.info(f"{path = } {file_type = } {kwargs = }")
@@ -96,13 +102,6 @@ class IOBase(ABC):
 
 @attrs.define
 class IOWrapper(IOBase):
-    _read_funcs: MappingProxyType = attrs.field(
-        default=READ_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
-    )
-    _write_funcs: MappingProxyType = attrs.field(
-        default=WRITE_FUNCS, validator=instance_of(MappingProxyType), converter=MappingProxyType
-    )
-
     def new_guid(self) -> str:
         self.guid = str(uuid4())
         return self.guid
@@ -114,12 +113,6 @@ class IOWrapper(IOBase):
 @attrs.define
 class FakeIOWrapper(IOBase):
     files: dict = attrs.field(factory=dict, validator=instance_of(dict))
-    _read_funcs: MappingProxyType = attrs.field(
-        factory=dict, validator=instance_of(MappingProxyType), converter=MappingProxyType
-    )
-    _write_funcs: MappingProxyType = attrs.field(
-        factory=dict, validator=instance_of(MappingProxyType), converter=MappingProxyType
-    )
 
     def __attrs_post_init__(self) -> None:
         self._read_funcs = MappingProxyType(dict.fromkeys(READ_FUNCS, self._read_fn))
