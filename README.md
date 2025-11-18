@@ -228,6 +228,7 @@ After the pipe is run, the config is saved. The optimised logical plan is added 
 │   │   ├── __init__.py
 │   │   ├── test_derive_cols.py
 │   │   ├── test_inspect.py
+│   │   ├── test_transform.py
 │   │   └── test_validation.py
 │   ├── services
 │   │   ├── __init__.py
